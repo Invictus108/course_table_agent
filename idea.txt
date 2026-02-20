@@ -1,0 +1,6 @@
+take the framework from a simple agent like Openclawd
+add a voice model that can interact in live time
+generate consistent images of a girl based on voice model responses, so it seems like the voice is coming from here
+
+TODO
+Add more ideas here:
