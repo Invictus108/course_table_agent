@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "CourseTable API Caller",
+  "version": "1.0.0",
+  "description": "Sends an authenticated request to api.coursetable.com using your browser session.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "host_permissions": [
+    "https://api.coursetable.com/*"
+  ],
+  "permissions": []
+}
