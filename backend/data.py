@@ -1,21 +1,14 @@
-import requests
-
-url = "https://api.coursetable.com/api/catalog/public/202601"
-
-response = requests.get(url)
-response.raise_for_status()   # throws if request failed
-
-data = response.json()        # parsed JSON → Python dict / list
-
-
-d = data[500]
-# pretty pring d
 import json
-print(json.dumps(d, indent=4))
 
-print(len(data))
-for i in data:
-    try:
-        print(i["subject"])
-    except:
-        pass
+# load json
+with open('202601.json', 'r', encoding="utf-8") as f:
+    data = json.load(f)
+
+s = set()
+for i in data["data"]["courses"]:
+    for j in i["listings"]:
+        s.add(j["subject"])
+
+print(s)
+
+

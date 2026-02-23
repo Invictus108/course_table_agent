@@ -46,6 +46,8 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             Matches courses in ANY of the listed departments.
             Example:
                 department = ["CS", "MATH"]
+            
+            Departments: {'CSSM', 'SNHL', 'ARBC', 'MMES', 'EP&E', 'HPM', 'PLSH', 'MGRK', 'WLOF', 'ELP', 'USAF', 'HEBR', 'HNDI', 'SBCR', 'PHAR', 'AKKD', 'CSMC', 'PMAE', 'PHIL', 'SWED', 'MCDB', 'SMTC', 'ENRG', 'BNGL', 'FLPN', 'OTTM', 'COSM', 'SBS', 'EGYP', 'TAML', 'FNSH', 'BENG', 'CENG', 'EMPH', 'MEDR', 'TLGU', 'ITAL', 'CPSC', 'CZEC', 'PHYS', 'PA', 'RSEE', 'ASL', 'JDST', 'ECE', 'MD', 'EHS', 'CSSY', 'VAIR', 'CSBR', 'CSBF', 'ER&M', 'PUBH', 'CDE', 'HSAR', 'CB&B', 'ENV', 'KREN', 'B&BS', 'MRES', 'MGMT', 'BIS', 'HSCI', 'TDPS', 'HIST', 'SOCY', 'MHHR', 'MEDC', 'ENGL', 'GMAN', 'EDST', 'PHUM', 'BURM', 'CAND', 'GENE', 'MGT', 'EXCH', 'MBIO', 'MUSI', 'PTB', 'HELN', 'CSEC', 'MATH', 'S&DS', 'PERS', 'CSDC', 'CGSC', 'FILM', 'EMD', 'AFAM', 'CLSS', 'UKRN', 'YDSH', 'ENAS', 'IMED', 'RUSS', 'CSJE', 'TBTN', 'HLTH', 'MUS', 'SKRT', 'CSMY', 'AMST', 'PORT', 'REL', 'DISR', 'HSHM', 'INP', 'EALL', 'LAST', 'PRAC', 'DRAM', 'ASTR', 'ART', 'EPS', 'E&RS', 'EVST', 'MENG', 'MDVL', 'PATH', 'CHEM', 'ARCG', 'NURS', 'NAVY', 'CSTC', 'WGSS', 'HGRN', 'VIET', 'ARCH', 'SAST', 'CHNS', 'SWAH', 'CSPC', 'CSGH', 'ACCT', 'MESO', 'PNJB', 'SLAV', 'YORU', 'BIOL', 'NSCI', 'PLSC', 'CLCV', 'ENVE', 'MB&B', 'NELC', 'CSBK', 'APHY', 'ANTH', 'LATN', 'IBIO', 'EEB', 'RLST', 'CSES', 'INDN', 'PSYC', 'FREN', 'LAW', 'SPAN', 'LING', 'NPLI', 'KHMR', 'SCIE', 'CSYC', 'URBN', 'EAST', 'CBIO', 'C&MP', 'GREK', 'TKSH', 'EMST', 'MTBT', 'QUAL', 'AMTH', 'GLBL', 'JAPN', 'AFST', 'ECON', 'ZULU', 'DRST', 'CSTD', 'CHER', 'CPLT', 'DUTC', 'CHLD', 'HUMS'
 
         - professor_rating:
             Lower bound (inclusive) on professor rating.
@@ -73,23 +75,27 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             # course_code: range [min, max]
             if "course_code" in filters:
                 lo, hi = filters["course_code"]
-                code = item.get("course_code")
+                code = item["listings"][0].get("course_code")
                 if code is None or not (lo <= code <= hi):
                     ok = False
 
             # department: list of strings (ANY match)
             if ok and "department" in filters:
-                if item.get("department") not in filters["department"]: # TODO: department is an array of strings, not a string
+                lis = item.get("listings")
+                for l in lis:
+                    if l["subject"] in filters["department"]:
+                        break
+                else:
                     ok = False
 
             # professor_rating: lower bound
             if ok and "professor_rating" in filters:
-                if item.get("professor_rating", 0) < filters["professor_rating"]:
+                if item.get("average_rating", 0) < filters["professor_rating"]:
                     ok = False
 
             # difficulty: upper bound
             if ok and "difficulty" in filters:
-                if item.get("difficulty", float("inf")) > filters["difficulty"]:
+                if item.get("average_workload", float("inf")) > filters["difficulty"]:
                     ok = False
 
             # time: range [start, end] (minutes since midnight)
@@ -193,5 +199,10 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
         sel = selected_set(ctx)
         sel.clear()
         return {"selected_ids": sorted(sel)}
+    
+    @mcp.tool()
+    def export_to_coursetable(ctx: Context) -> Dict[str, Any]:
+        sel = selected_set(ctx)
+        return {"selected_ids": sorted(sel), "items": [DATA_BY_ID[i] for i in sel]}
 
     return mcp
