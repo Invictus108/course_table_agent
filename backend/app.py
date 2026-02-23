@@ -128,7 +128,6 @@ def index():
                 if fn_name in {"add_to_selected", "remove_from_selected","clear_selected"}:
                     selected_result = asyncio.run(call_mcp_tool("get_selected",  {}, id))
                     chosen = json.loads(selected_result.content[0].text)["items"]
-                    print(chosen)
 
                 if not isinstance(tool_result, str):
                     result_str = "\n".join([c.text for c in tool_result.content])

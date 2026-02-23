@@ -77,7 +77,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
                 lo, hi = filters["course_code"]
                 code = item["listings"][0].get("course_code") if len(item["listings"]) > 0 else ""
                 if code != None and len(code.split(" ")) > 1:
-                    code = int(code.split(" ")[1])
+                    code = int(code.split(" ")[1].strip()[:4])
                 else:
                     code = 0
                 if code is None or not (lo <= code <= hi):

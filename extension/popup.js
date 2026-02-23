@@ -7,9 +7,11 @@ const statusEl = document.getElementById("status");
 const coursesEl = document.getElementById("courses");
 const promptEl = document.getElementById("prompt");
 const submitButton = document.getElementById("submit");
+const messagesEl = document.getElementById("messages");
 
 let userData = null;
 let worksheetsCache = [];
+let chat = []
 
 function setStatus(msg, isError = false) {
   statusEl.textContent = msg;
@@ -136,6 +138,9 @@ async function submit() {
       setStatus("User data not loaded yet. Please refresh.", true);
       return;
     }
+    
+    pushMessage("user", promptText);
+    promptEl.value = "";
 
     const yearToLabel = (y) => {
       const map = {
@@ -183,15 +188,39 @@ async function submit() {
     }
 
     setStatus("Submitted successfully.");
+    pushMessage("ai", data?.message ?? "(no response)");
     console.log("Submit response:", data);
-    alert(data)
+
     return data;
   } catch (err) {
     console.error(err);
     setStatus(err?.message || String(err), true);
+    pushMessage("ai", `Error: ${err?.message || String(err)}`);
   } finally {
     submitButton.disabled = false;
   }
 }
 
 submitButton.addEventListener("click", submit);
+
+function renderMessages() {
+  if (!messagesEl) return;
+
+  messagesEl.innerHTML = chat
+    .map((m) => {
+      const cls = m.role === "user" ? "msg msg-user" : "msg msg-ai";
+      const html = (m.role === "ai") ? DOMPurify.sanitize(marked.parse(m.text)) : escapeHtml(m.text)
+      // Use textContent-safe escaping, then inject as HTML
+      // (newlines are handled by CSS white-space: pre-wrap)
+      return `<div class="${cls}">${html}</div>`;
+    })
+    .join("");
+
+  // auto-scroll to bottom
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function pushMessage(role, text) {
+  chat.push({ role, text: String(text ?? "") });
+  renderMessages();
+}

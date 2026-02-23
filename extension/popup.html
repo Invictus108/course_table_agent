@@ -1,36 +1,55 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="utf-8"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="header">
-    <div class="logo">Y</div>
-    <div class="header-text">
-      <h1>Yale CourseAI</h1>
-      <p>Worksheet Viewer</p>
+  <head>
+    <meta charset="utf-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="logo">Y</div>
+        <div class="header-text">
+          <h1>Yale CourseAI</h1>
+          <p>Worksheet Viewer</p>
+        </div>
+        <div class="live-badge">
+          <div class="live-dot"></div>
+          Live
+        </div>
+      </div>
+      <div class="hint">
+        Log into
+        <a href="https://coursetable.com" target="_blank">coursetable.com</a>
+        first — we use your session to load your courses.
+      </div>
+      <div class="body">
+        <div>
+          <div class="field-label">Select Worksheet</div>
+          <select id="worksheetSelect" disabled>
+            <option>Loading…</option>
+          </select>
+        </div>
+        <div class="divider"></div>
+        <div class="courses">
+          <div class="field-label">Selected Courses</div>
+          <div id="courses">—</div>
+        </div>
+        <div class="divider"></div>
+        <div class="messages" id="messages"></div>
+        <div class="divider"></div>
+        <div class="status-box">
+          <div id="status" class="status">Initializing…</div>
+        </div>
+        <textarea id="prompt" placeholder="Enter a message:"></textarea>
+        <button type="submit" id="submit">Send</button>
+      </div>
     </div>
-    <div class="live-badge"><div class="live-dot"></div>Live</div>
-  </div>
-  <div class="hint">Log into <a href="https://coursetable.com" target="_blank">coursetable.com</a> first — we use your session to load your real courses.</div>
-  <div class="body">
-    <div>
-      <div class="field-label">Select Worksheet</div>
-      <select id="worksheetSelect" disabled><option>Loading…</option></select>
-    </div>
-    <div class="divider"></div>
-    <div>
-      <div class="field-label">Your Courses</div>
-      <div id="courses">—</div>
-    </div>
-    <div class="status-box">
-      <div id="status" class="status">Initializing…</div>
-    </div>
-    <div class="divider"></div>
-    <textarea id="prompt" placeholder="Enter a message:"></textarea>
-    <button type="submit" id="submit">Send</button>
+    <script src="marked.min.js"></script>
+    <script src="purify.min.js"></script>
     <script src="popup.js" type="module"></script>
   </body>
 </html>
