@@ -11,6 +11,7 @@ import json
 import asyncio
 
 load_dotenv()
+os.environ["AHTROPIC_BASE_URL"] = "https://api.minimax.io/anthropic"
 
 
 app = Flask(__name__)
