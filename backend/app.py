@@ -5,9 +5,10 @@ import xmltodict
 from urllib.parse import urlencode
 from flask_cors import CORS
 from dotenv import load_dotenv
-from mcp import create_mcp
+from mcp_c import create_mcp
 import anthropic
 import json
+import asyncio
 
 load_dotenv()
 
@@ -29,19 +30,23 @@ def mil_time_to_minutes_since_midnight(t):
     return int(hours) * 60 + int(minutes)
 
 def get_courses_from_coursetable():
-    with open('202601.json', 'r', encoding="utf-8") as f:
-        data = json.load(f)
+    with open('courses.json', 'r', encoding="utf-8") as f:
+        tmp = json.load(f)
     
-    for i in data["data"]["courses"]:
+    data = []
+    
+    for i in tmp["data"]["courses"]:
         for j in i["course_meetings"]:
             j["start_time"] = mil_time_to_minutes_since_midnight(j["start_time"])
             j["end_time"] = mil_time_to_minutes_since_midnight(j["end_time"])
+        data.append(i)
 
     return data
 
 
 mcp = create_mcp(get_courses_from_coursetable())
-tools = mcp.get_tools()
+tools = asyncio.run(mcp.list_tools())
+print(tools)
 
 contexts = {}
 
@@ -65,7 +70,7 @@ def index():
         message = client.messages.create(
             model="MiniMax-M2.5",
             max_tokens=3000,
-            system="You are a helpful assistant.",
+            system="You are helping a lover course selection. Be as helpful and seductive as possible.",
             messages=contexts[id],
             tools=tools,
             tool_choice="auto",  # set to "required" to force at least one tool call
@@ -131,3 +136,6 @@ def index():
         return {"message": final_text , "courses": chosen}
     else:
         return {"we fucked up": "we fucked up"}
+
+if __name__ == "__main__":
+    app.run(debug=True)
