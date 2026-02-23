@@ -42,12 +42,9 @@ function renderWorksheetCourses(ws, seasonMaps) {
   const crnMap = seasonMaps.get(ws.season) || new Map();
 
   if (!ws.courses.length) {
-    metaEl.textContent = `Worksheet has 0 courses.`;
     setCoursesHtml("—");
     return;
   }
-
-  metaEl.textContent = `Season ${ws.season} • Worksheet #${ws.worksheetNumber} • ${ws.courses.length} course(s)`;
 
   const items = ws.courses.map((entry) => {
     if (entry.hidden === false) {
