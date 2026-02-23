@@ -1,9 +1,15 @@
 import { fetchWorksheets, fetchCoursesForSeason, makeWorksheetKey, getAllCoursesBySeasons, getUserData } from "./utils.js"
 
+const API_ROUTE = "http://127.0.0.1:5001"
+
 const worksheetSelect = document.getElementById("worksheetSelect");
 const statusEl = document.getElementById("status");
 const coursesEl = document.getElementById("courses");
-const metaEl = document.getElementById("meta");
+const promptEl = document.getElementById("prompt");
+const submitButton = document.getElementById("submit");
+
+let userData = null;
+let worksheetsCache = [];
 
 function setStatus(msg, isError = false) {
   statusEl.textContent = msg;
@@ -72,11 +78,12 @@ function renderWorksheetCourses(ws, seasonMaps) {
 
 async function init() {
   try {
-    const userData = await getUserData();
+    userData = await getUserData();
     console.log(userData);
     setStatus("Fetching worksheets…");
 
     const { seasons, worksheets } = await fetchWorksheets();
+    worksheetsCache = worksheets;
 
     if (worksheets.length === 0) {
       renderWorksheetDropdown([]);
@@ -114,3 +121,77 @@ async function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+async function submit() {
+  try {
+    submitButton.disabled = true;
+
+    const promptText = (promptEl?.value ?? "").trim();
+    if (!promptText) {
+      setStatus("Please enter a prompt.", true);
+      return;
+    }
+
+    if (!userData) {
+      setStatus("User data not loaded yet. Please refresh.", true);
+      return;
+    }
+
+    const yearToLabel = (y) => {
+      const map = {
+        2029: "freshman",
+        2028: "sophomore",
+        2027: "junior",
+        2026: "senior",
+      };
+      return map[y];
+    };
+
+    const worksheetKey = worksheetSelect.value;
+
+    const ws = worksheetsCache.find(
+      (w) => makeWorksheetKey(w.season, w.worksheetNumber) === worksheetKey
+    );
+
+    const selectedCourses = (ws.courses || [])
+      .filter((c) => c?.hidden === false)
+
+    const payload = {
+      netId: userData.netId,
+      year: yearToLabel(userData.year),
+      major: userData.major,
+      courses: selectedCourses, 
+      prompt: promptText,
+    };
+
+    setStatus("Submitting…");
+
+    const res = await fetch(API_ROUTE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const msg =
+        (data && (data.error || data.message)) ||
+        text ||
+        `Request failed (${res.status})`;
+      throw new Error(msg);
+    }
+
+    setStatus("Submitted successfully.");
+    console.log("Submit response:", data);
+    alert(data)
+    return data;
+  } catch (err) {
+    console.error(err);
+    setStatus(err?.message || String(err), true);
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
+submitButton.addEventListener("click", submit);

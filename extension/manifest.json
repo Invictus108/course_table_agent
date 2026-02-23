@@ -13,5 +13,5 @@
     "default_path": "popup.html"
   },
   "permissions": ["sidePanel"],
-  "host_permissions": ["https://api.coursetable.com/*"]
+  "host_permissions": ["https://api.coursetable.com/*", "http://127.0.0.1:5000"]
 }

@@ -28,7 +28,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
     # ---- TOOLS ----
 
     @mcp.tool()
-    def query_items(filters: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    def query_items(filters: Dict[str, Any], ctx) -> Dict[str, Any]:
         """
         Filter parameters for course search.
 
@@ -75,7 +75,11 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             # course_code: range [min, max]
             if "course_code" in filters:
                 lo, hi = filters["course_code"]
-                code = item["listings"][0].get("course_code")
+                code = item["listings"][0].get("course_code") if len(item["listings"]) > 0 else ""
+                if code != None and len(code.split(" ")) > 1:
+                    code = int(code.split(" ")[1])
+                else:
+                    code = 0
                 if code is None or not (lo <= code <= hi):
                     ok = False
 
@@ -90,12 +94,18 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
 
             # professor_rating: lower bound
             if ok and "professor_rating" in filters:
-                if item.get("average_rating", 0) < filters["professor_rating"]:
+                rating = item.get("average_rating", 0)
+                if rating == None:
+                    rating = 0
+                if rating < filters["professor_rating"]:
                     ok = False
 
             # difficulty: upper bound
             if ok and "difficulty" in filters:
-                if item.get("average_workload", float("inf")) > filters["difficulty"]:
+                difficulty = item.get("average_workload", float("inf"))
+                if difficulty == None:
+                    difficulty = float("inf")
+                if difficulty > filters["difficulty"]:
                     ok = False
 
             # time: range [start, end] (minutes since midnight)
@@ -125,9 +135,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             - Only call after you have concrete course IDs (not just course names).
 
             ARGUMENTS:
-            - ids (List[str]): Course IDs exactly as returned by the course table or search tools
-            - ctx (Context): contains field context_id with the user's session ID
-            Do NOT ask the user for this and do NOT fabricate it—pass through the provided ctx.
+            - ids (List[str]): Course IDs exactly as returned by the course table or search tools, as strings
 
             BEHAVIOR:
             - Appends valid IDs to the user's existing selection in ctx.
@@ -156,8 +164,6 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             Get classes user has selected to their list.
 
             ARGUMENTS:
-            - ctx (Context): contains field context_id with the user's session ID
-            Do NOT ask the user for this and do NOT fabricate it—pass through the provided ctx.
         """
         sel = selected_set(ctx)
         return {
@@ -171,8 +177,6 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
         Remove selected classes from user's list
 
         ARGUMENTS:
-            - ctx (Context): contains field context_id with the user's session ID
-            Do NOT ask the user for this and do NOT fabricate it—pass through the provided ctx.
         
         DOES NOT USE:
             - If the user is only browsing or asking for recommendations without choosing
@@ -189,8 +193,6 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
         Remove all selected classes from user's list
 
         ARGUMENTS:
-            - ctx (Context): contains field context_id with the user's session ID
-            Do NOT ask the user for this and do NOT fabricate it—pass through the provided ctx.
         
         DOES NOT USE:
             - If the user is only browsing or asking for recommendations without choosing
