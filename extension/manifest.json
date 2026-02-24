@@ -12,6 +12,6 @@
   "side_panel": {
     "default_path": "popup.html"
   },
-  "permissions": ["sidePanel"],
+  "permissions": ["sidePanel", "tabs"],
   "host_permissions": ["https://api.coursetable.com/*", "http://127.0.0.1:5000"]
 }

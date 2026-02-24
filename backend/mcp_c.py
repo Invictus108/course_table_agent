@@ -50,7 +50,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
     # ---- TOOLS ----
 
     @mcp.tool()
-    def query_items(filters: Dict[str, Any], ctx) -> Dict[str, Any]:
+    def query_items(filters: Dict[str, Any], client_id: str) -> Dict[str, Any]:
         """
         Filter parameters for course search.
 
@@ -147,6 +147,10 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
                     if (
                         k.lower() in item["title"].lower()
                         or k.lower() in item["description"].lower()
+                        or (
+                            item.get("course_code")
+                            and k.lower() in item["course_code"].lower()
+                        )
                     ):
                         break
                 else:

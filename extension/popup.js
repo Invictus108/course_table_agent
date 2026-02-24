@@ -1,6 +1,14 @@
-import { fetchWorksheets, fetchCoursesForSeason, makeWorksheetKey, getAllCoursesBySeasons, getUserData, removeCourses, addCourses } from "./utils.js"
+import {
+  fetchWorksheets,
+  fetchCoursesForSeason,
+  makeWorksheetKey,
+  getAllCoursesBySeasons,
+  getUserData,
+  removeCourses,
+  addCourses,
+} from "./utils.js";
 
-const API_ROUTE = "http://127.0.0.1:5001"
+const API_ROUTE = "http://127.0.0.1:5001";
 
 const worksheetSelect = document.getElementById("worksheetSelect");
 const statusEl = document.getElementById("status");
@@ -10,13 +18,13 @@ const submitButton = document.getElementById("submit");
 const messagesEl = document.getElementById("messages");
 
 let userData = null;
-let chat = []
+let chat = [];
 
 let courseCache = [];
-let crns = []
+let crns = [];
 let season = null;
 let worksheetNumber = null;
-
+let seasonMaps = null;
 
 function setStatus(msg, isError = false) {
   statusEl.textContent = msg;
@@ -30,12 +38,18 @@ function setCoursesHtml(html) {
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (m) => {
     switch (m) {
-      case "&": return "&amp;";
-      case "<": return "&lt;";
-      case ">": return "&gt;";
-      case '"': return "&quot;";
-      case "'": return "&#039;";
-      default: return m;
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      case "'":
+        return "&#039;";
+      default:
+        return m;
     }
   });
 }
@@ -60,7 +74,7 @@ function renderWorksheetCourses(ws, seasonMaps) {
   }
 
   courseCache = [];
-  crns = []
+  crns = [];
 
   const items = ws.courses.map((entry) => {
     if (entry.hidden === false) {
@@ -73,19 +87,22 @@ function renderWorksheetCourses(ws, seasonMaps) {
       const sec = found?.section ? `S${found.section}` : "";
 
       season = ws.season;
-      worksheetNumber = ws.worksheetNumber
+      worksheetNumber = ws.worksheetNumber;
       courseCache.push({
         crn,
         title,
         code,
         section: found?.section ?? null,
-        hidden
+        hidden,
       });
 
       crns.push(crn);
 
       const badges = [];
-      if (code) badges.push(`<span class="pill">${escapeHtml(code)}${sec ? " " + escapeHtml(sec) : ""}</span>`);
+      if (code)
+        badges.push(
+          `<span class="pill">${escapeHtml(code)}${sec ? " " + escapeHtml(sec) : ""}</span>`,
+        );
       if (hidden === true) badges.push(`<span class="pill">hidden</span>`);
       if (hidden === null) badges.push(`<span class="pill">hidden:null</span>`);
 
@@ -113,27 +130,32 @@ async function init() {
       return;
     }
 
-    setStatus(`Found ${worksheets.length} worksheet(s) across ${seasons.length} season(s).\nFetching courses for each season…`);
+    setStatus(
+      `Found ${worksheets.length} worksheet(s) across ${seasons.length} season(s).\nFetching courses for each season…`,
+    );
 
     // Fetch all seasons in parallel (one GraphQL request per season)
-    const seasonMaps = await getAllCoursesBySeasons(seasons);
+    seasonMaps = await getAllCoursesBySeasons(seasons);
 
     renderWorksheetDropdown(worksheets);
     worksheetSelect.disabled = false;
 
     // Default: first worksheet
     const currentKey = worksheetSelect.value;
-    const current = worksheets.find((w) => makeWorksheetKey(w.season, w.worksheetNumber) === currentKey);
+    const current = worksheets.find(
+      (w) => makeWorksheetKey(w.season, w.worksheetNumber) === currentKey,
+    );
     if (current) renderWorksheetCourses(current, seasonMaps);
 
     setStatus("Ready.");
 
     worksheetSelect.addEventListener("change", () => {
       const key = worksheetSelect.value;
-      const ws = worksheets.find((w) => makeWorksheetKey(w.season, w.worksheetNumber) === key);
+      const ws = worksheets.find(
+        (w) => makeWorksheetKey(w.season, w.worksheetNumber) === key,
+      );
       if (ws) renderWorksheetCourses(ws, seasonMaps);
     });
-
   } catch (err) {
     console.error(err);
     renderWorksheetDropdown([]);
@@ -158,7 +180,7 @@ async function submit() {
       setStatus("User data not loaded yet. Please refresh.", true);
       return;
     }
-    
+
     pushMessage("user", promptText);
     promptEl.value = "";
 
@@ -198,14 +220,13 @@ async function submit() {
       throw new Error(msg);
     }
 
-    for (const a of data.actions){
-
+    for (const a of data.actions) {
       if (a.type == "update_worksheet") {
         const new_crns = a.args.selected;
 
         // find course that have been removed or added
-        const removed_crns = crns.filter(crn => !new_crns.includes(crn));
-        const added_crns = new_crns.filter(crn => !crns.includes(crn));
+        const removed_crns = crns.filter((crn) => !new_crns.includes(crn));
+        const added_crns = new_crns.filter((crn) => !crns.includes(crn));
         crns = new_crns;
 
         if (removed_crns.length > 0) {
@@ -214,7 +235,7 @@ async function submit() {
 
         if (added_crns.length > 0) {
           addCourses(added_crns, { season, worksheetNumber });
-        }    
+        }
 
         // why is this lagging
         // set small delay
@@ -222,24 +243,21 @@ async function submit() {
           try {
             // rerender the course list
             const { seasons, worksheets } = await fetchWorksheets();
-            const seasonMaps = await getAllCoursesBySeasons(seasons);
-
-            renderWorksheetDropdown(worksheets);
-            worksheetSelect.disabled = false;
 
             // Default: first worksheet
             const currentKey = worksheetSelect.value;
-            const current = worksheets.find((w) => makeWorksheetKey(w.season, w.worksheetNumber) === currentKey);
+            const current = worksheets.find(
+              (w) =>
+                makeWorksheetKey(w.season, w.worksheetNumber) === currentKey,
+            );
             if (current) renderWorksheetCourses(current, seasonMaps);
-
+            chrome.tabs.query({ url: "*://*.coursetable.com/*" }, (tabs) => {
+              for (const tab of tabs) chrome.tabs.reload(tab.id);
+            });
           } catch (err) {
             console.error(err);
           }
         }, 1000);
-
-        
-
-
       }
       if (a.type == "create_worksheet") {
         const new_ws_crns = a.args.ids;
@@ -247,9 +265,8 @@ async function submit() {
 
         //TODO: create new worksheet
         //TODO: update season, worksheet number, crns, and course cache
-        console.log("New worksheet: ",name, new_ws_crns);
+        console.log("New worksheet: ", name, new_ws_crns);
       }
-     
     }
 
     setStatus("Submitted successfully.");
@@ -266,7 +283,6 @@ async function submit() {
   }
 }
 
-
 submitButton.addEventListener("click", submit);
 
 function renderMessages() {
@@ -275,7 +291,10 @@ function renderMessages() {
   messagesEl.innerHTML = chat
     .map((m) => {
       const cls = m.role === "user" ? "msg msg-user" : "msg msg-ai";
-      const html = (m.role === "ai") ? DOMPurify.sanitize(marked.parse(m.text)) : escapeHtml(m.text)
+      const html =
+        m.role === "ai"
+          ? DOMPurify.sanitize(marked.parse(m.text))
+          : escapeHtml(m.text);
       // Use textContent-safe escaping, then inject as HTML
       // (newlines are handled by CSS white-space: pre-wrap)
       return `<div class="${cls}">${html}</div>`;
