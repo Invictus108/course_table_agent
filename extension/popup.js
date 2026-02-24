@@ -6,6 +6,7 @@ import {
   getUserData,
   removeCourses,
   addCourses,
+  createWorksheet,
 } from "./utils.js";
 
 const API_ROUTE = "http://127.0.0.1:5001";
@@ -115,6 +116,16 @@ function renderWorksheetCourses(ws, seasonMaps) {
   setCoursesHtml(`<ul>${items.join("")}</ul>`);
 }
 
+const onWorksheetChange = async () => {
+  const { seasons, worksheets } = await fetchWorksheets();
+  const key = worksheetSelect.value;
+  console.log(key);
+  const ws = worksheets.find(
+    (w) => makeWorksheetKey(w.season, w.worksheetNumber) === key,
+  );
+  if (ws) renderWorksheetCourses(ws, seasonMaps);
+};
+
 async function init() {
   try {
     userData = await getUserData();
@@ -149,13 +160,7 @@ async function init() {
 
     setStatus("Ready.");
 
-    worksheetSelect.addEventListener("change", () => {
-      const key = worksheetSelect.value;
-      const ws = worksheets.find(
-        (w) => makeWorksheetKey(w.season, w.worksheetNumber) === key,
-      );
-      if (ws) renderWorksheetCourses(ws, seasonMaps);
-    });
+    worksheetSelect.addEventListener("change", onWorksheetChange);
   } catch (err) {
     console.error(err);
     renderWorksheetDropdown([]);
@@ -262,6 +267,25 @@ async function submit() {
       if (a.type == "create_worksheet") {
         const new_ws_crns = a.args.ids;
         const name = a.args.name;
+
+        await createWorksheet(name, season, new_ws_crns);
+
+        setTimeout(async () => {
+          const { seasons, worksheets } = await fetchWorksheets();
+          renderWorksheetDropdown(worksheets);
+          worksheetSelect.disabled = false;
+
+          // Default: first worksheet
+          const currentKey = worksheetSelect.value;
+          const current = worksheets.find(
+            (w) => makeWorksheetKey(w.season, w.worksheetNumber) === currentKey,
+          );
+          if (current) renderWorksheetCourses(current, seasonMaps);
+
+          chrome.tabs.query({ url: "*://*.coursetable.com/*" }, (tabs) => {
+            for (const tab of tabs) chrome.tabs.reload(tab.id);
+          });
+        }, 1000);
 
         //TODO: create new worksheet
         //TODO: update season, worksheet number, crns, and course cache

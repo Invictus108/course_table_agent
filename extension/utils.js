@@ -1,19 +1,20 @@
-const BASE_URL = "https://api.coursetable.com"
-const USER_DATA_URL = BASE_URL + "/api/user/info"
+const BASE_URL = "https://api.coursetable.com";
+const USER_DATA_URL = BASE_URL + "/api/user/info";
 const WORKSHEETS_URL = BASE_URL + "/api/user/worksheets";
 const GRAPHQL_URL = BASE_URL + "/ferry/v1/graphql";
 const UPDATE_WS_COURSES_URL = BASE_URL + "/api/user/updateWorksheetCourses";
+const CREATE_WS_URL = BASE_URL + "/api/user/updateWorksheetMetadata";
 
 export async function getUserData() {
   const res = await fetch(USER_DATA_URL, {
     method: "GET",
     credentials: "include",
     headers: {
-      "accept": "*/*",
-      "origin": "https://coursetable.com",
-      "referer": "https://coursetable.com/"
-    }
-  })
+      accept: "*/*",
+      origin: "https://coursetable.com",
+      referer: "https://coursetable.com/",
+    },
+  });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -27,17 +28,17 @@ export async function fetchWorksheets() {
     method: "GET",
     credentials: "include",
     headers: {
-      "accept": "*/*",
-      "origin": "https://coursetable.com",
-      "referer": "https://coursetable.com/"
-    }
+      accept: "*/*",
+      origin: "https://coursetable.com",
+      referer: "https://coursetable.com/",
+    },
   });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`Worksheets request failed: HTTP ${res.status}\n${text}`);
   }
-  const d = await res.json()
+  const d = await res.json();
   return buildWorksheetIndex(d.data);
 }
 
@@ -62,24 +63,28 @@ export async function fetchCoursesForSeason(seasonCode) {
     credentials: "include",
     headers: {
       "content-type": "application/json",
-      "accept": "*/*",
-      "origin": "https://coursetable.com",
-      "referer": "https://coursetable.com/"
+      accept: "*/*",
+      origin: "https://coursetable.com",
+      referer: "https://coursetable.com/",
     },
     body: JSON.stringify({
       query: COURSES_BY_SEASON_QUERY,
-      variables: { season: seasonCode }
-    })
+      variables: { season: seasonCode },
+    }),
   });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`GraphQL failed for season ${seasonCode}: HTTP ${res.status}\n${text}`);
+    throw new Error(
+      `GraphQL failed for season ${seasonCode}: HTTP ${res.status}\n${text}`,
+    );
   }
 
   const json = await res.json();
   if (json.errors?.length) {
-    throw new Error(`GraphQL errors for season ${seasonCode}:\n${JSON.stringify(json.errors, null, 2)}`);
+    throw new Error(
+      `GraphQL errors for season ${seasonCode}:\n${JSON.stringify(json.errors, null, 2)}`,
+    );
   }
   return json.data?.courses || [];
 }
@@ -97,14 +102,15 @@ function buildWorksheetIndex(worksheetsData) {
         season,
         worksheetNumber,
         name: ws?.name ?? `Worksheet ${worksheetNumber}`,
-        courses: Array.isArray(ws?.courses) ? ws.courses : []
+        courses: Array.isArray(ws?.courses) ? ws.courses : [],
       });
     }
   }
 
   // sort: newest season first (string season codes often sortable), then worksheet #
   worksheets.sort((a, b) => {
-    if (a.season !== b.season) return String(b.season).localeCompare(String(a.season));
+    if (a.season !== b.season)
+      return String(b.season).localeCompare(String(a.season));
     return a.worksheetNumber - b.worksheetNumber;
   });
 
@@ -116,12 +122,12 @@ export function makeWorksheetKey(season, worksheetNumber) {
 }
 
 export async function getAllCoursesBySeasons(seasons) {
-  const coursesBySeason = []
+  const coursesBySeason = [];
   await Promise.all(
-      seasons.map(async (season) => {
-        const courses = await fetchCoursesForSeason(season);
-        coursesBySeason[season] = courses;
-      })
+    seasons.map(async (season) => {
+      const courses = await fetchCoursesForSeason(season);
+      coursesBySeason[season] = courses;
+    }),
   );
   return buildCrnToCourseTitleMap(coursesBySeason);
 }
@@ -146,7 +152,7 @@ function buildCrnToCourseTitleMap(coursesBySeason) {
           crnMap.set(crn, {
             title,
             course_code: lst?.course_code ?? "",
-            section: lst?.section ?? ""
+            section: lst?.section ?? "",
           });
         }
       }
@@ -158,8 +164,6 @@ function buildCrnToCourseTitleMap(coursesBySeason) {
   return seasonMaps;
 }
 
-
-
 async function updateWorksheetCourses(body) {
   console.log("updateWorksheetCourses", body);
   const res = await fetch(UPDATE_WS_COURSES_URL, {
@@ -167,9 +171,9 @@ async function updateWorksheetCourses(body) {
     credentials: "include",
     headers: {
       "content-type": "application/json",
-      "accept": "*/*",
-      "origin": "https://coursetable.com",
-      "referer": "https://coursetable.com/"
+      accept: "*/*",
+      origin: "https://coursetable.com",
+      referer: "https://coursetable.com/",
     },
     body: JSON.stringify(body),
   });
@@ -197,11 +201,15 @@ async function updateWorksheetCourses(body) {
     const details = Object.entries(err)
       .map(([i, code]) => `#${i}: ${code}`)
       .join(", ");
-    throw new Error(`updateWorksheetCourses failed (HTTP ${res.status}): ${details}`);
+    throw new Error(
+      `updateWorksheetCourses failed (HTTP ${res.status}): ${details}`,
+    );
   }
 
   if (typeof err === "string") {
-    throw new Error(`updateWorksheetCourses failed (HTTP ${res.status}): ${err}`);
+    throw new Error(
+      `updateWorksheetCourses failed (HTTP ${res.status}): ${err}`,
+    );
   }
 
   throw new Error(`updateWorksheetCourses failed: HTTP ${res.status}\n${text}`);
@@ -217,8 +225,7 @@ function randomColor() {
     .padStart(6, "0")}`;
 }
 
-
-export async function addCourses(add_crns, { season, worksheetNumber}) {
+export async function addCourses(add_crns, { season, worksheetNumber }) {
   console.log(season, worksheetNumber);
   const crns = Array.isArray(add_crns) ? add_crns : [];
   const updates = crns.map((crn) => ({
@@ -251,3 +258,28 @@ export async function removeCourses(remove_crns, { season, worksheetNumber }) {
   return updateWorksheetCourses(updates);
 }
 
+export async function createWorksheet(name, season, crns) {
+  const res = await fetch(CREATE_WS_URL, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "content-type": "application/json",
+      accept: "*/*",
+      origin: "https://coursetable.com",
+      referer: "https://coursetable.com/",
+    },
+    body: JSON.stringify({
+      action: "add",
+      season: season,
+      name: name,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Create worksheet failed: HTTP ${res.status}\n${text}`);
+  }
+
+  const { worksheetNumber } = await res.json();
+  await addCourses(crns, { season, worksheetNumber });
+}
