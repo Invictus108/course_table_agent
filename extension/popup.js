@@ -10,8 +10,9 @@ const submitButton = document.getElementById("submit");
 const messagesEl = document.getElementById("messages");
 
 let userData = null;
-let courseCache = [];
 let chat = []
+
+let courseCache = [];
 let crns = []
 let season = null;
 let worksheetNumber = null;
@@ -57,6 +58,9 @@ function renderWorksheetCourses(ws, seasonMaps) {
     setCoursesHtml("—");
     return;
   }
+
+  courseCache = [];
+  crns = []
 
   const items = ws.courses.map((entry) => {
     if (entry.hidden === false) {
@@ -129,6 +133,7 @@ async function init() {
       const ws = worksheets.find((w) => makeWorksheetKey(w.season, w.worksheetNumber) === key);
       if (ws) renderWorksheetCourses(ws, seasonMaps);
     });
+
   } catch (err) {
     console.error(err);
     renderWorksheetDropdown([]);
@@ -193,27 +198,50 @@ async function submit() {
       throw new Error(msg);
     }
 
-    if (data.courses != []) {
-      const new_crns = (data.courses ?? [])
-      .map(course => course.crn)
-      .filter(crn => crn != null);
+    for (const a of data.actions){
 
-      // find course that have been removed or added
-      const removed_crns = crns.filter(crn => !new_crns.includes(crn));
-      const added_crns = new_crns.filter(crn => !crns.includes(crn));
+      if (a.type == "update_worksheet") {
+        const new_crns = a.args.selected;
 
-      if (removed_crns.length > 0) {
-        removeCourses(removed_crns, { season, worksheetNumber });
+        // find course that have been removed or added
+        const removed_crns = crns.filter(crn => !new_crns.includes(crn));
+        const added_crns = new_crns.filter(crn => !crns.includes(crn));
+        crns = new_crns;
+
+        if (removed_crns.length > 0) {
+          removeCourses(removed_crns, { season, worksheetNumber });
+        }
+
+        if (added_crns.length > 0) {
+          addCourses(added_crns, { season, worksheetNumber });
+        }    
+
+        // the fuck is this?
+         // rerender the course list
+        const { seasons, worksheets } = await fetchWorksheets();
+        const seasonMaps = await getAllCoursesBySeasons(seasons);
+
+        renderWorksheetDropdown(worksheets);
+        worksheetSelect.disabled = false;
+
+        // Default: first worksheet
+        const currentKey = worksheetSelect.value;
+        const current = worksheets.find((w) => makeWorksheetKey(w.season, w.worksheetNumber) === currentKey);
+        if (current) renderWorksheetCourses(current, seasonMaps);
+
+
+
       }
+      if (a.type == "create_worksheet") {
+        const new_ws_crns = a.args.ids;
+        const name = a.args.name;
 
-      if (added_crns.length > 0) {
-        addCourses(added_crns, { season, worksheetNumber });
+        //TODO: create new worksheet
+        //TODO: update season, worksheet number, crns, and course cache
+        console.log("New worksheet: ",name, new_ws_crns);
       }
-
-
-      
+     
     }
-    
 
     setStatus("Submitted successfully.");
     pushMessage("ai", data?.message ?? "(no response)");

@@ -1,0 +1,15 @@
+fix add and remove funtions for course table
+    - what is unknown?
+    - why is list lagging a tick behind
+
+
+impliment create new worksheet
+    - 
+
+switch between worksheets?
+
+relaod cousetable on each change
+
+finetune prompts
+
+make chosable peronality prompt

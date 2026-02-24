@@ -113,6 +113,7 @@ def index():
             tools=anthropic_tools,
             # tool_choice="auto",  # set to "required" to force at least one tool call
         )
+
         # append
         contexts[id].append({"role": "assistant", "content": message.content})
 
@@ -154,9 +155,11 @@ def index():
                     selected_result = asyncio.run(
                         call_mcp_tool("get_selected", {"client_id": id}, id)
                     )
-                    # chosen = json.loads(selected_result.content[0].text)["items"]
+                    chosen = json.loads(selected_result.content[0].text)["items"]
+                    # just get crn field
+                    crns = [c["crn"] for c in chosen]
                     actions.append(
-                        {"type": "update_worksheet", "args": {"selected": chosen}}
+                        {"type": "update_worksheet", "args": {"selected": crns}}
                     )
 
                 if fn_name == "create_worksheet":
@@ -210,6 +213,8 @@ def index():
 
         print("sending response")
         # print(len(chosen) if chosen else "no chosen")
+
+        print(actions)
 
         return {"message": final_text, "actions": actions}
     else:
