@@ -33,7 +33,6 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
                 "areas": course.get("areas"),
                 "course_id": course.get("course_id"),
                 "course_meetings": course.get("course_meetings"),
-
                 # listing-level fields
                 "subject": listing.get("subject"),
                 "course_code": listing.get("course_code"),
@@ -69,7 +68,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             Matches courses in ANY of the listed departments.
             Example:
                 department = ["CS", "MATH"]
-            
+
             Departments: {'CSSM', 'SNHL', 'ARBC', 'MMES', 'EP&E', 'HPM', 'PLSH', 'MGRK', 'WLOF', 'ELP', 'USAF', 'HEBR', 'HNDI', 'SBCR', 'PHAR', 'AKKD', 'CSMC', 'PMAE', 'PHIL', 'SWED', 'MCDB', 'SMTC', 'ENRG', 'BNGL', 'FLPN', 'OTTM', 'COSM', 'SBS', 'EGYP', 'TAML', 'FNSH', 'BENG', 'CENG', 'EMPH', 'MEDR', 'TLGU', 'ITAL', 'CPSC', 'CZEC', 'PHYS', 'PA', 'RSEE', 'ASL', 'JDST', 'ECE', 'MD', 'EHS', 'CSSY', 'VAIR', 'CSBR', 'CSBF', 'ER&M', 'PUBH', 'CDE', 'HSAR', 'CB&B', 'ENV', 'KREN', 'B&BS', 'MRES', 'MGMT', 'BIS', 'HSCI', 'TDPS', 'HIST', 'SOCY', 'MHHR', 'MEDC', 'ENGL', 'GMAN', 'EDST', 'PHUM', 'BURM', 'CAND', 'GENE', 'MGT', 'EXCH', 'MBIO', 'MUSI', 'PTB', 'HELN', 'CSEC', 'MATH', 'S&DS', 'PERS', 'CSDC', 'CGSC', 'FILM', 'EMD', 'AFAM', 'CLSS', 'UKRN', 'YDSH', 'ENAS', 'IMED', 'RUSS', 'CSJE', 'TBTN', 'HLTH', 'MUS', 'SKRT', 'CSMY', 'AMST', 'PORT', 'REL', 'DISR', 'HSHM', 'INP', 'EALL', 'LAST', 'PRAC', 'DRAM', 'ASTR', 'ART', 'EPS', 'E&RS', 'EVST', 'MENG', 'MDVL', 'PATH', 'CHEM', 'ARCG', 'NURS', 'NAVY', 'CSTC', 'WGSS', 'HGRN', 'VIET', 'ARCH', 'SAST', 'CHNS', 'SWAH', 'CSPC', 'CSGH', 'ACCT', 'MESO', 'PNJB', 'SLAV', 'YORU', 'BIOL', 'NSCI', 'PLSC', 'CLCV', 'ENVE', 'MB&B', 'NELC', 'CSBK', 'APHY', 'ANTH', 'LATN', 'IBIO', 'EEB', 'RLST', 'CSES', 'INDN', 'PSYC', 'FREN', 'LAW', 'SPAN', 'LING', 'NPLI', 'KHMR', 'SCIE', 'CSYC', 'URBN', 'EAST', 'CBIO', 'C&MP', 'GREK', 'TKSH', 'EMST', 'MTBT', 'QUAL', 'AMTH', 'GLBL', 'JAPN', 'AFST', 'ECON', 'ZULU', 'DRST', 'CSTD', 'CHER', 'CPLT', 'DUTC', 'CHLD', 'HUMS'
 
         - professor_rating:
@@ -87,7 +86,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             Times are integers representing minutes since midnight.
             Example:
                 time = [540, 720]           # 9:00–12:00
-        
+
         - keywords
             List of strings (any match).
             Will match words in course title and description.
@@ -142,17 +141,20 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
                 t = item.get("time")
                 if t is None or not (start <= t <= end):
                     ok = False
-            
+
             if ok and "keywords" in filters:
                 for k in filters["keywords"]:
-                    if k.lower() in item["title"].lower() or k.lower() in item["description"].lower():
+                    if (
+                        k.lower() in item["title"].lower()
+                        or k.lower() in item["description"].lower()
+                    ):
                         break
                 else:
                     ok = False
 
             if ok:
                 out.append(item)
-        
+
         # filter out those with same course_id
         clean_out = []
         c_ids = set()
@@ -162,71 +164,69 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
                 clean_out.append(i)
         out = clean_out
 
-        
         random.shuffle(out)
 
         return {"total": len(out), "items": out[:25]}
 
     @mcp.tool()
     def add_to_selected(ids: List[str], client_id: str) -> Dict[str, Any]:
-        
         """
-            Add one or more course IDs to the current user's selected-course list
-            (stored in the per-user session context).
+        Add one or more course IDs to the current user's selected-course list
+        (stored in the per-user session context).
+        Automatically updates the user's current CourseTable worksheet.
 
-            WHEN TO USE:
-            - Call this tool when the user explicitly says they want to add/select/save/include
-            specific courses in their plan 
-            - Only call after you have concrete crns (not just course names).
+        WHEN TO USE:
+        - Call this tool when the user explicitly says they want to add/select/save/include
+        specific courses in their plan
+        - Only call after you have concrete crns (not just course names).
 
-            ARGUMENTS:
-            - ids (List[str]): list of crn codes as strings
-            = client_id (str): the users id
+        ARGUMENTS:
+        - ids (List[str]): list of crn codes as strings
 
-            BEHAVIOR:
-            - Appends valid IDs to the user's existing selection in ctx.
-            - Ignores invalid IDs and IDs already selected (idempotent).
-            - Does not remove any previously selected courses.
+        BEHAVIOR:
+        - Appends valid IDs to the user's existing selection in ctx.
+        - Ignores invalid IDs and IDs already selected (idempotent).
+        - Does not remove any previously selected courses.
 
-            RETURNS:
-            - Dict with:
-            - selected_ids (List[str]): Sorted list of all currently selected course IDs
-                after this update.
+        RETURNS:
+        - Dict with:
+        - selected_ids (List[str]): Sorted list of all currently selected course IDs
+            after this update.
 
-            DO NOT USE:
-            - If the user is only browsing or asking for recommendations without choosing
-            specific courses to add.
+        DO NOT USE:
+        - If the user is only browsing or asking for recommendations without choosing
+        specific courses to add.
         """
         sel = selected_set(client_id)
         for i in ids:
             if i in DATA_BY_ID:
                 sel.add(i)
-                
+
         return {"selected_ids": sorted(sel)}
 
     @mcp.tool()
     def get_selected(client_id: str) -> Dict[str, Any]:
         """
-            Get classes user has selected to their list.
+        Get classes user has selected to their list.
 
-            Arguments:
-                - client_id (str): the users id
+        Arguments:
+            - client_id (str): the users id
         """
         sel = selected_set(client_id)
         return {
             "selected_ids": sorted(sel),
             "items": [DATA_BY_ID[i] for i in sel],
         }
-    
+
     @mcp.tool()
     def remove_from_selected(ids: List[str], client_id: str) -> Dict[str, Any]:
         """
         Remove selected classes from user's list
+        Automatically updates the user's current CourseTable worksheet.
 
         ARGUMENTS:
             - ids (List[str]): list of crn codes to remove
-            - client_id (str): the users id
-        
+
         DOES NOT USE:
             - If the user is only browsing or asking for recommendations without choosing
         """
@@ -240,16 +240,66 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
     def clear_selected(client_id: str) -> Dict[str, Any]:
         """
         Remove all selected classes from user's list
+        Automatically updates the user's current CourseTable worksheet.
 
         ARGUMENTS:
-            - client_id (str): the users id
-        
+
         DOES NOT USE:
             - If the user is only browsing or asking for recommendations without choosing
-        
+
         """
         sel = selected_set(client_id)
         sel.clear()
         return {"selected_ids": sorted(sel)}
-    
+
+    @mcp.tool()
+    def set_selected(ids: List[str], client_id: str):
+        """
+        Sets the user's selected courses, based on the provided list of CRNs
+        Automatically updates the user's current CourseTable worksheet.
+
+        WHEN TO USE:
+        - Call this tool only when you want to set the user's selection to EXACTLY the provided list of courses (replacing any previous selection)
+        - Only call after you have concrete crns (not just course names).
+
+        ARGUMENTS:
+            - ids (List[str]): list of CRN codes to include in the worksheet
+
+        DOES NOT USE:
+            - If the user is only browsing or asking for recommendations without choosing
+
+        """
+        sel = selected_set(client_id)
+        sel.clear()
+        for i in ids:
+            if i in DATA_BY_ID:
+                sel.add(i)
+
+        return {"selected_ids": sorted(sel)}
+
+    @mcp.tool()
+    def create_worksheet(name: str, ids: List[str], client_id: str):
+        """
+        Creates a new CourseTable worksheet, populated with the specified courses.
+
+        WHEN TO USE:
+        - Call this tool when the user explicitly says they want to you to create a new worksheet
+        - Only call after you have concrete crns (not just course names).
+
+        ARGUMENTS:
+            - name (str): the name of the worksheet
+            - ids (List[str]): list of crn codes to include in the worksheet
+
+        DOES NOT USE:
+            - If the user is only browsing or asking for recommendations without choosing
+
+        """
+        sel = selected_set(client_id)
+        sel.clear()
+        for i in ids:
+            if i in DATA_BY_ID:
+                sel.add(i)
+
+        return {"selected_ids": sorted(sel)}
+
     return mcp
