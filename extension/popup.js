@@ -69,13 +69,13 @@ function renderWorksheetDropdown(worksheets) {
 function renderWorksheetCourses(ws, seasonMaps) {
   const crnMap = seasonMaps.get(ws.season) || new Map();
 
+  courseCache = [];
+  crns = [];
+
   if (!ws.courses.length) {
     setCoursesHtml("—");
     return;
   }
-
-  courseCache = [];
-  crns = [];
 
   const items = ws.courses.map((entry) => {
     if (entry.hidden === false) {
@@ -278,13 +278,15 @@ async function submit() {
           setTimeout(() => {
             const options = Array.from(worksheetSelect.options);
 
-            const opt = options.find(o =>
-              (o.textContent || "").includes(name)
+            const opt = options.find((o) =>
+              (o.textContent || "").includes(name),
             );
 
             if (opt) {
               worksheetSelect.value = opt.value;
-              worksheetSelect.dispatchEvent(new Event("change", { bubbles: true }));
+              worksheetSelect.dispatchEvent(
+                new Event("change", { bubbles: true }),
+              );
             } else {
               console.warn("Worksheet not found containing name:", name);
             }
@@ -292,17 +294,15 @@ async function submit() {
             // Default: first worksheet
             const currentKey = worksheetSelect.value;
             const current = worksheets.find(
-              (w) => makeWorksheetKey(w.season, w.worksheetNumber) === currentKey,
+              (w) =>
+                makeWorksheetKey(w.season, w.worksheetNumber) === currentKey,
             );
             if (current) renderWorksheetCourses(current, seasonMaps);
 
             chrome.tabs.query({ url: "*://*.coursetable.com/*" }, (tabs) => {
               for (const tab of tabs) chrome.tabs.reload(tab.id);
             });
-            
           }, 500);
-
-          
         }, 1000);
 
         //TODO: create new worksheet
