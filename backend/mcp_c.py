@@ -126,7 +126,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             if ok and "department" in filters:
                 dep = item.get("subject")
                 if dep != None and dep in filters["department"]:
-                    continue
+                    pass
                 else:
                     ok = False
 
@@ -156,8 +156,8 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
                     if days == filters["days_of_week"]:
                         if start_time >= filters["time"][0] and end_time <= filters["time"][1]:
                             break
-                    else:
-                        ok = False
+                else:
+                    ok = False
 
 
             if ok and "keywords" in filters:
