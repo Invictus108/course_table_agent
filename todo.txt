@@ -1,6 +1,7 @@
 fix add and remove funtions for course table
     - what is unknown?
-    - why is list lagging a tick behind
+    - why does it tweak out when its empty
+
 
 
 impliment create new worksheet

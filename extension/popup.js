@@ -216,19 +216,28 @@ async function submit() {
           addCourses(added_crns, { season, worksheetNumber });
         }    
 
-        // the fuck is this?
-         // rerender the course list
-        const { seasons, worksheets } = await fetchWorksheets();
-        const seasonMaps = await getAllCoursesBySeasons(seasons);
+        // why is this lagging
+        // set small delay
+        setTimeout(async () => {
+          try {
+            // rerender the course list
+            const { seasons, worksheets } = await fetchWorksheets();
+            const seasonMaps = await getAllCoursesBySeasons(seasons);
 
-        renderWorksheetDropdown(worksheets);
-        worksheetSelect.disabled = false;
+            renderWorksheetDropdown(worksheets);
+            worksheetSelect.disabled = false;
 
-        // Default: first worksheet
-        const currentKey = worksheetSelect.value;
-        const current = worksheets.find((w) => makeWorksheetKey(w.season, w.worksheetNumber) === currentKey);
-        if (current) renderWorksheetCourses(current, seasonMaps);
+            // Default: first worksheet
+            const currentKey = worksheetSelect.value;
+            const current = worksheets.find((w) => makeWorksheetKey(w.season, w.worksheetNumber) === currentKey);
+            if (current) renderWorksheetCourses(current, seasonMaps);
 
+          } catch (err) {
+            console.error(err);
+          }
+        }, 1000);
+
+        
 
 
       }

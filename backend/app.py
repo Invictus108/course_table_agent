@@ -98,7 +98,7 @@ def index():
             contexts[id].append(
                 {
                     "role": f"user",
-                    "content": f"I am a {year} at Yale with id {id} {"studying " + major if major != "Undeclared" else ""}. I am considering these courses: {courses}, and I am looking for my courses next semester.",
+                    "content": f"I am a {year} at Yale with id {id} {"studying " + major if major != "Undeclared" else ""}. I am considering these courses: {courses}, and I am looking for my courses next semester. Around 5 courses per semeester is typical with 6 being a overload."
                 }
             )
 
