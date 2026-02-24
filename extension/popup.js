@@ -7,6 +7,7 @@ import {
   removeCourses,
   addCourses,
   createWorksheet,
+  switchWorksheetFromString
 } from "./utils.js";
 
 const API_ROUTE = "http://127.0.0.1:5001";
@@ -64,6 +65,30 @@ function renderWorksheetDropdown(worksheets) {
     worksheetSelect.appendChild(opt);
   }
   worksheetSelect.disabled = worksheets.length === 0;
+}
+
+async function switchWorksheetOnActiveTab(inputString) {
+  console.log("switchWorksheetOnActiveTab", inputString);
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) return;
+  console.log("good tab");
+
+  // await chrome.scripting.executeScript({
+  //   target: { tabId: tab.id },
+  //   func: switchWorksheetFromString,
+  //   args: [inputString],
+  // });
+
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: switchWorksheetFromString,
+      args: [inputString],
+    });
+    console.log("executeScript results:", results);
+  } catch (e) {
+    console.error("executeScript error:", e);
+  }
 }
 
 function renderWorksheetCourses(ws, seasonMaps) {
@@ -124,6 +149,11 @@ const onWorksheetChange = async () => {
     (w) => makeWorksheetKey(w.season, w.worksheetNumber) === key,
   );
   if (ws) renderWorksheetCourses(ws, seasonMaps);
+
+  const selectedText = worksheetSelect.options[worksheetSelect.selectedIndex].textContent.trim();
+  console.log(selectedText)
+  // switch worksheet
+  switchWorksheetOnActiveTab(selectedText);
 };
 
 async function init() {
@@ -304,6 +334,11 @@ async function submit() {
             });
           }, 500);
         }, 1000);
+
+
+        const selectedText = worksheetSelect.options[worksheetSelect.selectedIndex].textContent.trim();
+        // switch to new worksheet
+        switchWorksheetOnActiveTab(selectedText);
 
         //TODO: create new worksheet
         //TODO: update season, worksheet number, crns, and course cache

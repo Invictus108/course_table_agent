@@ -283,3 +283,96 @@ export async function createWorksheet(name, season, crns) {
   const { worksheetNumber } = await res.json();
   await addCourses(crns, { season, worksheetNumber });
 }
+
+
+/**
+ * Switch CourseTable worksheet based on a free-form input string.
+ * Returns true if a worksheet was switched.
+ */
+export async function switchWorksheetFromString(input) {
+  console.log("switchWorksheetFromString", input);
+  const normalizedInput = String(input).toLowerCase();
+  console.log("normalizedInput", normalizedInput);
+
+  // 1) Find the worksheet dropdown button (by class)
+  console.log("find button")
+  const target = String(normalizedInput ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+  console.log("target", target);
+  if (!target) return null;
+  console.log("lloking for buttons")
+
+
+  // _button_d5on0_21
+  try {
+    const candidates = Array.from(document.querySelectorAll('button._button_d5on0_21'))
+  } catch (error) {
+    console.error('[CourseTable] Worksheet dropdown button not found', error);
+    return false;
+  }
+  
+
+  comsole.log("candidates", candidates);
+  const dropdownButton = candidates[1];
+
+  comsole.log("buttons", dropdownButton);
+
+  if (!dropdownButton) {
+    console.error('[CourseTable] Worksheet dropdown button not found');
+    return false;
+  }
+
+  console.log("good buttom")
+
+  // 2) Open dropdown
+  dropdownButton.click();
+  
+  console.log("drop down open")
+
+  // 3) Wait for react-select listbox
+  const listbox = await new Promise((resolve) => {
+  // Check immediately
+  const existing = document.querySelector('[role="listbox"]');
+  if (existing) return resolve(existing);
+
+  // Otherwise, observe DOM changes
+  const observer = new MutationObserver(() => {
+    const lb = document.querySelector('[role="listbox"]');
+    if (lb) {
+      observer.disconnect();
+      resolve(lb);
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Timeout fallback
+  setTimeout(() => {
+    observer.disconnect();
+    resolve(null);
+  }, 1500);
+});
+  if (!listbox) {
+    console.error('[CourseTable] Worksheet listbox did not appear');
+    return false;
+  }
+
+  // 4) Scan options
+  const options = [...listbox.querySelectorAll('[role="option"]')];
+
+  for (const option of options) {
+    const name = option.textContent?.trim();
+    if (!name) continue;
+
+    if (normalizedInput.includes(name.toLowerCase())) {
+      option.click();
+      return true;
+    }
+  }
+
+  console.warn('[CourseTable] No matching worksheet found');
+  return false;
+}

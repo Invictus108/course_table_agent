@@ -108,7 +108,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
         filters = filters or {}
         out = []
 
-        for item in data:
+        for item in DATA_BY_ID.values():
             ok = True
 
             # course_code: range [min, max]
@@ -177,12 +177,12 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             if ok:
                 out.append(item)
 
-        # filter out those with same course_id
+        # filter out those with same title
         clean_out = []
-        c_ids = set()
+        c_titles = set()
         for i in out:
-            if i["course_id"] not in c_ids:
-                c_ids.add(i["course_id"])
+            if i["title"] not in c_titles:
+                c_titles.add(i["title"])
                 clean_out.append(i)
         out = clean_out
 
