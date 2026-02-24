@@ -275,16 +275,34 @@ async function submit() {
           renderWorksheetDropdown(worksheets);
           worksheetSelect.disabled = false;
 
-          // Default: first worksheet
-          const currentKey = worksheetSelect.value;
-          const current = worksheets.find(
-            (w) => makeWorksheetKey(w.season, w.worksheetNumber) === currentKey,
-          );
-          if (current) renderWorksheetCourses(current, seasonMaps);
+          setTimeout(() => {
+            const options = Array.from(worksheetSelect.options);
 
-          chrome.tabs.query({ url: "*://*.coursetable.com/*" }, (tabs) => {
-            for (const tab of tabs) chrome.tabs.reload(tab.id);
-          });
+            const opt = options.find(o =>
+              (o.textContent || "").includes(name)
+            );
+
+            if (opt) {
+              worksheetSelect.value = opt.value;
+              worksheetSelect.dispatchEvent(new Event("change", { bubbles: true }));
+            } else {
+              console.warn("Worksheet not found containing name:", name);
+            }
+
+            // Default: first worksheet
+            const currentKey = worksheetSelect.value;
+            const current = worksheets.find(
+              (w) => makeWorksheetKey(w.season, w.worksheetNumber) === currentKey,
+            );
+            if (current) renderWorksheetCourses(current, seasonMaps);
+
+            chrome.tabs.query({ url: "*://*.coursetable.com/*" }, (tabs) => {
+              for (const tab of tabs) chrome.tabs.reload(tab.id);
+            });
+            
+          }, 500);
+
+          
         }, 1000);
 
         //TODO: create new worksheet

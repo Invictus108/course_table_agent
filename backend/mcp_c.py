@@ -33,6 +33,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
                 "areas": course.get("areas"),
                 "course_id": course.get("course_id"),
                 "course_meetings": course.get("course_meetings"),
+
                 # listing-level fields
                 "subject": listing.get("subject"),
                 "course_code": listing.get("course_code"),
@@ -87,6 +88,16 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             Example:
                 time = [540, 720]           # 9:00–12:00
 
+                
+        - days_of_week:
+            Bitmask filter on days of the week.
+            Example:
+                days_of_week = 20           # Tuesday/Thursday
+            
+            Important: Coursetable days_of_week is a bitmask where Monday = 2, Tuesday = 4, Wednesday = 8, Thursday = 16, Friday = 32, Saturday = 64, Sunday = 128.
+            A value represents the sum of these (e.g., 20 = 4 + 16 = Tuesday/Thursday).
+            Always decode meeting days using this mapping.
+
         - keywords
             List of strings (any match).
             Will match words in course title and description.
@@ -137,10 +148,17 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
 
             # time: range [start, end] (minutes since midnight)
             if ok and "time" in filters:
-                start, end = filters["time"]
-                t = item.get("time")
-                if t is None or not (start <= t <= end):
-                    ok = False
+                meetings = item.get("course_meetings")
+                for m in meetings:
+                    start_time = m["start_time"]
+                    end_time = m["end_time"]
+                    days = m["days_of_week"]
+                    if days == filters["days_of_week"]:
+                        if start_time >= filters["time"][0] and end_time <= filters["time"][1]:
+                            break
+                    else:
+                        ok = False
+
 
             if ok and "keywords" in filters:
                 for k in filters["keywords"]:
@@ -196,6 +214,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
         - Dict with:
         - selected_ids (List[str]): Sorted list of all currently selected course IDs
             after this update.
+        
 
         DO NOT USE:
         - If the user is only browsing or asking for recommendations without choosing
@@ -215,6 +234,10 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
 
         Arguments:
             - client_id (str): the users id
+        
+        Important: Coursetable days_of_week is a bitmask where Monday = 2, Tuesday = 4, Wednesday = 8, Thursday = 16, Friday = 32, Saturday = 64, Sunday = 128.
+        A value represents the sum of these (e.g., 20 = 4 + 16 = Tuesday/Thursday).
+        Always decode meeting days using this mapping.
         """
         sel = selected_set(client_id)
         return {

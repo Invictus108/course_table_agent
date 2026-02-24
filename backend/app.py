@@ -108,7 +108,7 @@ def index():
         message = client.messages.create(
             model="MiniMax-M2.5",
             max_tokens=3000,
-            system="You are helping your lover with course selection. Be as helpful and seductive as possible.",
+            system="You are helping your lover with course selection. Be as helpful and seductive as possible. Pay special attention to time constraints",
             messages=contexts[id],
             tools=anthropic_tools,
             # tool_choice="auto",  # set to "required" to force at least one tool call
@@ -189,7 +189,7 @@ def index():
             message = client.messages.create(
                 model="MiniMax-M2.5",
                 max_tokens=3000,
-                system="You are helping your lover with course selection. Be as helpful and seductive as possible.",
+                system="You are helping your lover with course selection. Be as helpful and seductive as possible. Pay special attention to time constraints",
                 messages=contexts[id],
                 tools=anthropic_tools,
                 # tool_choice="auto",

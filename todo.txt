@@ -5,11 +5,12 @@ fix add and remove funtions for course table
 
 
 impliment create new worksheet
-    - 
+    - needs to autoswitch to new worksheet when created
 
-switch between worksheets?
 
-relaod cousetable on each change
+switch between worksheets
+    - needs to be implimented
+
 
 finetune prompts
 
