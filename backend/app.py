@@ -117,7 +117,7 @@ def index():
         contexts[id].append({"role": "assistant", "content": message.content})
 
         max_tool_rounds = 6
-        chosen = None
+        # chosen = None
         rounds = 0
         actions = []
 
@@ -154,9 +154,9 @@ def index():
                     selected_result = asyncio.run(
                         call_mcp_tool("get_selected", {"client_id": id}, id)
                     )
-                    chosen = json.loads(selected_result.content[0].text)["items"]
+                    # chosen = json.loads(selected_result.content[0].text)["items"]
                     actions.append(
-                        {"type": "update_selection", "args": {"selected": chosen}}
+                        {"type": "update_worksheet", "args": {"selected": chosen}}
                     )
 
                 if fn_name == "create_worksheet":
@@ -209,9 +209,9 @@ def index():
         )
 
         print("sending response")
-        print(len(chosen) if chosen else "no chosen")
+        # print(len(chosen) if chosen else "no chosen")
 
-        return {"message": final_text, "courses": chosen, "actions": actions}
+        return {"message": final_text, "actions": actions}
     else:
         return {"we fucked up": "we fucked up"}
 
