@@ -1,4 +1,4 @@
-import { fetchWorksheets, fetchCoursesForSeason, makeWorksheetKey, getAllCoursesBySeasons, getUserData } from "./utils.js"
+import { fetchWorksheets, fetchCoursesForSeason, makeWorksheetKey, getAllCoursesBySeasons, getUserData, removeCourses, addCourses } from "./utils.js"
 
 const API_ROUTE = "http://127.0.0.1:5001"
 
@@ -10,8 +10,12 @@ const submitButton = document.getElementById("submit");
 const messagesEl = document.getElementById("messages");
 
 let userData = null;
-let worksheetsCache = [];
+let courseCache = [];
 let chat = []
+let crns = []
+let season = null;
+let worksheetNumber = null;
+
 
 function setStatus(msg, isError = false) {
   statusEl.textContent = msg;
@@ -64,6 +68,18 @@ function renderWorksheetCourses(ws, seasonMaps) {
       const code = found?.course_code ? `${found.course_code}` : "";
       const sec = found?.section ? `S${found.section}` : "";
 
+      season = ws.season;
+      worksheetNumber = ws.worksheetNumber
+      courseCache.push({
+        crn,
+        title,
+        code,
+        section: found?.section ?? null,
+        hidden
+      });
+
+      crns.push(crn);
+
       const badges = [];
       if (code) badges.push(`<span class="pill">${escapeHtml(code)}${sec ? " " + escapeHtml(sec) : ""}</span>`);
       if (hidden === true) badges.push(`<span class="pill">hidden</span>`);
@@ -85,7 +101,6 @@ async function init() {
     setStatus("Fetching worksheets…");
 
     const { seasons, worksheets } = await fetchWorksheets();
-    worksheetsCache = worksheets;
 
     if (worksheets.length === 0) {
       renderWorksheetDropdown([]);
@@ -152,20 +167,11 @@ async function submit() {
       return map[y];
     };
 
-    const worksheetKey = worksheetSelect.value;
-
-    const ws = worksheetsCache.find(
-      (w) => makeWorksheetKey(w.season, w.worksheetNumber) === worksheetKey
-    );
-
-    const selectedCourses = (ws.courses || [])
-      .filter((c) => c?.hidden === false)
-
     const payload = {
       netId: userData.netId,
       year: yearToLabel(userData.year),
       major: userData.major,
-      courses: selectedCourses, 
+      courses: courseCache,
       prompt: promptText,
     };
 
@@ -187,6 +193,28 @@ async function submit() {
       throw new Error(msg);
     }
 
+    if (data.courses != []) {
+      const new_crns = (data.courses ?? [])
+      .map(course => course.crn)
+      .filter(crn => crn != null);
+
+      // find course that have been removed or added
+      const removed_crns = crns.filter(crn => !new_crns.includes(crn));
+      const added_crns = new_crns.filter(crn => !crns.includes(crn));
+
+      if (removed_crns.length > 0) {
+        removeCourses(removed_crns, { season, worksheetNumber });
+      }
+
+      if (added_crns.length > 0) {
+        addCourses(added_crns, { season, worksheetNumber });
+      }
+
+
+      
+    }
+    
+
     setStatus("Submitted successfully.");
     pushMessage("ai", data?.message ?? "(no response)");
     console.log("Submit response:", data);
@@ -200,6 +228,7 @@ async function submit() {
     submitButton.disabled = false;
   }
 }
+
 
 submitButton.addEventListener("click", submit);
 

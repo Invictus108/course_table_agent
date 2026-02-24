@@ -2,6 +2,7 @@ const BASE_URL = "https://api.coursetable.com"
 const USER_DATA_URL = BASE_URL + "/api/user/info"
 const WORKSHEETS_URL = BASE_URL + "/api/user/worksheets";
 const GRAPHQL_URL = BASE_URL + "/ferry/v1/graphql";
+const UPDATE_WS_COURSES_URL = BASE_URL + "/api/user/updateWorksheetCourses";
 
 export async function getUserData() {
   const res = await fetch(USER_DATA_URL, {
@@ -156,3 +157,97 @@ function buildCrnToCourseTitleMap(coursesBySeason) {
 
   return seasonMaps;
 }
+
+
+
+async function updateWorksheetCourses(body) {
+  console.log("updateWorksheetCourses", body);
+  const res = await fetch(UPDATE_WS_COURSES_URL, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "content-type": "application/json",
+      "accept": "*/*",
+      "origin": "https://coursetable.com",
+      "referer": "https://coursetable.com/"
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (res.ok) {
+    // 200: no body
+    return { ok: true, error: null };
+  }
+
+  // 400: JSON error body (per spec), but still be defensive
+  const text = await res.text().catch(() => "");
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch (_) {
+    // ignore parse errors; we'll throw with raw text
+  }
+
+  // Prefer structured error if present
+  const err = data?.error ?? null;
+
+  // Build a good message (bulk: object; single: string)
+  if (err && typeof err === "object") {
+    // { "0": "ALREADY_BOOKMARKED", "3": "NOT_BOOKMARKED" }
+    const details = Object.entries(err)
+      .map(([i, code]) => `#${i}: ${code}`)
+      .join(", ");
+    throw new Error(`updateWorksheetCourses failed (HTTP ${res.status}): ${details}`);
+  }
+
+  if (typeof err === "string") {
+    throw new Error(`updateWorksheetCourses failed (HTTP ${res.status}): ${err}`);
+  }
+
+  throw new Error(`updateWorksheetCourses failed: HTTP ${res.status}\n${text}`);
+}
+
+/**
+ * Bulk-add CRNs to a worksheet.
+ * Spec requires: season, worksheetNumber, crn, color, hidden
+ */
+function randomColor() {
+  return `#${Math.floor(Math.random() * 0xffffff)
+    .toString(16)
+    .padStart(6, "0")}`;
+}
+
+
+export async function addCourses(add_crns, { season, worksheetNumber}) {
+  console.log(season, worksheetNumber);
+  const crns = Array.isArray(add_crns) ? add_crns : [];
+  const updates = crns.map((crn) => ({
+    action: "add",
+    season,
+    crn: Number(crn),
+    worksheetNumber: Number(worksheetNumber),
+    color: randomColor(),
+    hidden: false,
+  }));
+
+  // If you're ever calling with 1 item, this still works.
+  return updateWorksheetCourses(updates);
+}
+
+/**
+ * Bulk-remove CRNs from a worksheet.
+ * Spec requires: season, worksheetNumber, crn
+ */
+export async function removeCourses(remove_crns, { season, worksheetNumber }) {
+  console.log(season, worksheetNumber);
+  const crns = Array.isArray(remove_crns) ? remove_crns : [];
+  const updates = crns.map((crn) => ({
+    action: "remove",
+    season,
+    crn: Number(crn),
+    worksheetNumber: Number(worksheetNumber),
+  }));
+
+  return updateWorksheetCourses(updates);
+}
+

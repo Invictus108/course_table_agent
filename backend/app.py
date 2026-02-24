@@ -10,6 +10,7 @@ from fastmcp import Client
 import anthropic
 import json
 import asyncio
+import mcp.types
 
 load_dotenv()
 
@@ -22,7 +23,7 @@ CORS(app
     # methods=["GET", "POST"]
 )
 
-os.environ["AHTROPIC_BASE_URL"] = "https://api.minimax.io/anthropic"
+os.environ["ANTHROPIC_BASE_URL"] = "https://api.minimax.io/anthropic"
 
 client = anthropic.Anthropic(
   api_key=os.getenv("ANTHROPIC_API_KEY")
@@ -57,7 +58,7 @@ async def call_mcp_tool(name: str, args: dict, id):
         ctx = {"client_id": id}
         return await mcp_client.call_tool(name, {**args, **ctx})
 
-def mcp_tool_to_anthropic_toolparam(t: mcp_types.Tool) -> dict:
+def mcp_tool_to_anthropic_toolparam(t) -> dict: # mcp_types.Tool
     d = t.model_dump()  # pydantic model -> dict
     # MCP uses inputSchema; Anthropic expects input_schema
     d["input_schema"] = d.pop("inputSchema")
@@ -85,7 +86,12 @@ def index():
 
         if id not in contexts:
             contexts[id] = []
-            contexts[id].append({"role": f"user", "content": f"I am a {year} at Yale with id {id} studying {major}. I have taken the following courses: {courses}, and I am looking for my courses next semester."})
+            contexts[id].append({"role": f"user", "content": f"I am a {year} at Yale with id {id} {"studying " + major if major != "Undeclared" else ""}. I am considering these courses: {courses} (make sure to add these to selected courses), and I am looking for my courses next semester."})
+        
+        print("test")
+        for i in contexts[id]:
+            print(i)
+        print("\n\n")
 
         if prompt:
             contexts[id].append({"role": f"user", "content": f"User {id}: " + prompt})
@@ -126,7 +132,7 @@ def index():
                 tool_result = asyncio.run(call_mcp_tool(fn_name, args, id))
 
                 if fn_name in {"add_to_selected", "remove_from_selected","clear_selected"}:
-                    selected_result = asyncio.run(call_mcp_tool("get_selected",  {}, id))
+                    selected_result = asyncio.run(call_mcp_tool("get_selected",  {"client_id": id}, id))
                     chosen = json.loads(selected_result.content[0].text)["items"]
 
                 if not isinstance(tool_result, str):
@@ -149,7 +155,7 @@ def index():
             message = client.messages.create(
                 model="MiniMax-M2.5",
                 max_tokens=3000,
-                system="You are a helpful assistant.",
+                system="You are helping your lover with course selection. Be as helpful and seductive as possible.",
                 messages=contexts[id],
                 tools=anthropic_tools,
                 # tool_choice="auto",
@@ -165,14 +171,18 @@ def index():
 
 
         # now message should be final assistant text
-        final_text = message.content
-        res = ""
-        for block in final_text:
-            if block.type != "thinking":
-                res += block.text + "\n"
-        return {"message": res , "courses": chosen}
+        final_text = "".join(
+            block.text
+            for block in message.content
+            if block.type == "text"
+        )
+
+        print("sending response")
+        print(len(chosen) if chosen else "no chosen")
+
+        return {"message": final_text , "courses": chosen}
     else:
         return {"we fucked up": "we fucked up"}
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=False, port=5001)
