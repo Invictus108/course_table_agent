@@ -33,6 +33,7 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
                 "areas": course.get("areas"),
                 "course_id": course.get("course_id"),
                 "course_meetings": course.get("course_meetings"),
+                "is_class": not course.get("section").isalpha(),
                 # listing-level fields
                 "subject": listing.get("subject"),
                 "course_code": listing.get("course_code"),
@@ -96,6 +97,11 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
             Important: Coursetable days_of_week is a bitmask where Monday = 2, Tuesday = 4, Wednesday = 8, Thursday = 16, Friday = 32, Saturday = 64, Sunday = 128.
             A value represents the sum of these (e.g., 20 = 4 + 16 = Tuesday/Thursday).
             Always decode meeting days using this mapping.
+
+        - only_courses:
+            A boolean flag to include only actual courses (no sections).
+            Example:
+                only_courses = True
 
         - keywords
             List of strings (any match).
@@ -168,6 +174,10 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
                     ):
                         break
                 else:
+                    ok = False
+
+            if ok and "only_courses" in filters and filters["only_courses"]:
+                if not item.get("is_class", True):
                     ok = False
 
             if ok and "keywords" in filters:
