@@ -306,7 +306,7 @@ async function submit() {
           renderWorksheetDropdown(worksheets);
           worksheetSelect.disabled = false;
 
-          chrome.tabs.query(
+          await chrome.tabs.query(
             { url: "*://*.coursetable.com/*" },
             async (tabs) => {
               for (const tab of tabs) await reloadTabAndWait(tab.id);

@@ -5,7 +5,7 @@ data = np.load("embeddings_with_text.npz", allow_pickle=True)
 
 model = SentenceTransformer(
     "BAAI/bge-large-en-v1.5",
-    device="cuda" 
+    device="cpu" 
 )
 
 def get_embedding(query):
