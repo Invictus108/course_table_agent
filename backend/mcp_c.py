@@ -93,10 +93,10 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
             Example:
                 average_rating = 4.2     # rating >= 4.2
 
-        - difficulty:
+        - average_workload:
             Upper bound (inclusive) on course difficulty.
             Example:
-                difficulty = 3.5           # difficulty <= 3.5
+                average_workload = 3.5           # difficulty <= 3.5
 
         - time:
             Range filter on start time (24-hour format).
@@ -179,11 +179,11 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
                     ok = False
 
             # difficulty: upper bound
-            if ok and "difficulty" in filters:
+            if ok and "average_workload" in filters:
                 difficulty = item.get("average_workload", float("inf"))
                 if difficulty == None:
                     difficulty = float("inf")
-                if difficulty > filters["difficulty"]:
+                if difficulty > filters["average_workload"]:
                     ok = False
 
             if ok and "days_of_week" in filters:
@@ -259,7 +259,7 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
             - For finding major requirements
         '''
         if major_code not in MAJOR_REQS:
-            return []
+            return "Major code not found"
         else:
             return MAJOR_REQS[major_code]
 
