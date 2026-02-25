@@ -4,7 +4,11 @@
 from typing import Any, Dict, List
 from mcp.server.fastmcp import Context, FastMCP
 import random
-from rag.rag import rag
+import sys
+
+# add rag path
+sys.path.append("..")
+from rag.rag import get_top_k
 
 
 def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> FastMCP:
@@ -43,7 +47,14 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
 
     MAJOR_REQS = {}
     for course in coure_reqs:
-        MAJOR_REQS[course["subject"]] = course["text"]
+        # check if its a list
+        if isinstance(course["subject"], list):
+            for s in course["subject"]:
+                MAJOR_REQS[s] = course["text"]
+        else:
+            MAJOR_REQS[course["subject"]] = course["text"]
+
+
     # Per-client selected list (in-memory, per process)
     SELECTED: Dict[str, set[str]] = {}
 
@@ -77,10 +88,10 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
 
             Departments: {'CSSM', 'SNHL', 'ARBC', 'MMES', 'EP&E', 'HPM', 'PLSH', 'MGRK', 'WLOF', 'ELP', 'USAF', 'HEBR', 'HNDI', 'SBCR', 'PHAR', 'AKKD', 'CSMC', 'PMAE', 'PHIL', 'SWED', 'MCDB', 'SMTC', 'ENRG', 'BNGL', 'FLPN', 'OTTM', 'COSM', 'SBS', 'EGYP', 'TAML', 'FNSH', 'BENG', 'CENG', 'EMPH', 'MEDR', 'TLGU', 'ITAL', 'CPSC', 'CZEC', 'PHYS', 'PA', 'RSEE', 'ASL', 'JDST', 'ECE', 'MD', 'EHS', 'CSSY', 'VAIR', 'CSBR', 'CSBF', 'ER&M', 'PUBH', 'CDE', 'HSAR', 'CB&B', 'ENV', 'KREN', 'B&BS', 'MRES', 'MGMT', 'BIS', 'HSCI', 'TDPS', 'HIST', 'SOCY', 'MHHR', 'MEDC', 'ENGL', 'GMAN', 'EDST', 'PHUM', 'BURM', 'CAND', 'GENE', 'MGT', 'EXCH', 'MBIO', 'MUSI', 'PTB', 'HELN', 'CSEC', 'MATH', 'S&DS', 'PERS', 'CSDC', 'CGSC', 'FILM', 'EMD', 'AFAM', 'CLSS', 'UKRN', 'YDSH', 'ENAS', 'IMED', 'RUSS', 'CSJE', 'TBTN', 'HLTH', 'MUS', 'SKRT', 'CSMY', 'AMST', 'PORT', 'REL', 'DISR', 'HSHM', 'INP', 'EALL', 'LAST', 'PRAC', 'DRAM', 'ASTR', 'ART', 'EPS', 'E&RS', 'EVST', 'MENG', 'MDVL', 'PATH', 'CHEM', 'ARCG', 'NURS', 'NAVY', 'CSTC', 'WGSS', 'HGRN', 'VIET', 'ARCH', 'SAST', 'CHNS', 'SWAH', 'CSPC', 'CSGH', 'ACCT', 'MESO', 'PNJB', 'SLAV', 'YORU', 'BIOL', 'NSCI', 'PLSC', 'CLCV', 'ENVE', 'MB&B', 'NELC', 'CSBK', 'APHY', 'ANTH', 'LATN', 'IBIO', 'EEB', 'RLST', 'CSES', 'INDN', 'PSYC', 'FREN', 'LAW', 'SPAN', 'LING', 'NPLI', 'KHMR', 'SCIE', 'CSYC', 'URBN', 'EAST', 'CBIO', 'C&MP', 'GREK', 'TKSH', 'EMST', 'MTBT', 'QUAL', 'AMTH', 'GLBL', 'JAPN', 'AFST', 'ECON', 'ZULU', 'DRST', 'CSTD', 'CHER', 'CPLT', 'DUTC', 'CHLD', 'HUMS'
 
-        - professor_rating:
-            Lower bound (inclusive) on professor rating.
+        - average_rating:
+            Lower bound (inclusive) on average class rating.
             Example:
-                professor_rating = 4.2     # rating >= 4.2
+                average_rating = 4.2     # rating >= 4.2
 
         - difficulty:
             Upper bound (inclusive) on course difficulty.
@@ -113,6 +124,13 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
             Will match words in course title and description.
             Example:
                 keywords = ["machine learning", "artificial intelligence"]
+        
+        - professors
+            List of strings (any match).
+            Will match professors.
+            Example:
+                professors = ["John Doe", "Jane Doe"]
+        - make sure to capitalize professor names
         """
 
         filters = filters or {}
@@ -140,12 +158,24 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
                 else:
                     ok = False
 
-            # professor_rating: lower bound
-            if ok and "professor_rating" in filters:
+            # professors: list of strings (ANY match)
+            if ok and "professors" in filters:
+                profs = item.get("professors")
+                if len(profs) == 0:
+                    ok = False
+                for p in profs:
+                    if p["professor"]["name"] in filters["professors"]:
+                        break
+                else:
+                    ok = False
+        
+
+            # average_rating: lower bound
+            if ok and "average_rating" in filters:
                 rating = item.get("average_rating", 0)
                 if rating == None:
                     rating = 0
-                if rating < filters["professor_rating"]:
+                if rating < filters["average_rating"]:
                     ok = False
 
             # difficulty: upper bound
@@ -216,7 +246,7 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
         return {"total": len(out), "items": out[:25]}
     
     @mcp.tool()
-    def get_major_reqs(major_code: str) -> List[Dict[str, Any]]:
+    def get_major_reqs(major_code: str) -> str:
         '''
         Get major requirements for a given major code.
 
@@ -250,7 +280,7 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
         DO NOT USE:
            - For finding courses or major requirments. There are other tools for that.
         """
-        return rag_search(query)
+        return get_top_k(query)
 
     @mcp.tool()
     def add_to_selected(ids: List[str], client_id: str) -> Dict[str, Any]:

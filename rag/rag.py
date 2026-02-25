@@ -15,7 +15,7 @@ embeddings = data["embeddings"]   # shape: (N, dim)
 texts = data["texts"]  
 
 
-def rag(query, k=5):
+def get_top_k(query, k=5):
     query_embedding = get_embedding(query)     # get query vector
     scores = embeddings @ query_embedding      # get dot products (cosine similarity for normalized vectors)
     top_k = scores.argsort()[::-1][:k]         # get top k
