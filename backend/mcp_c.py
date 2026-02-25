@@ -4,9 +4,10 @@
 from typing import Any, Dict, List
 from mcp.server.fastmcp import Context, FastMCP
 import random
+from rag.rag import rag
 
 
-def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
+def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> FastMCP:
     """
     Factory function.
     The caller provides the dataset.
@@ -34,11 +35,15 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
                 "course_id": course.get("course_id"),
                 "course_meetings": course.get("course_meetings"),
                 "is_class": not course.get("section").isalpha(),
+                "professors": course.get("course_professors"),
                 # listing-level fields
                 "subject": listing.get("subject"),
                 "course_code": listing.get("course_code"),
             }
 
+    MAJOR_REQS = {}
+    for course in coure_reqs:
+        MAJOR_REQS[course["subject"]] = course["text"]
     # Per-client selected list (in-memory, per process)
     SELECTED: Dict[str, set[str]] = {}
 
@@ -209,6 +214,43 @@ def create_mcp(data: List[Dict[str, Any]]) -> FastMCP:
         random.shuffle(out)
 
         return {"total": len(out), "items": out[:25]}
+    
+    @mcp.tool()
+    def get_major_reqs(major_code: str) -> List[Dict[str, Any]]:
+        '''
+        Get major requirements for a given major code.
+
+        ARGUMENTS:
+            - major_code (str): the major code (EX: CPSC, PHYS, ENGL)
+        
+        notes: for combined majors (EX: Math + CS) just combine the codes with a + (MATH+CPSC)
+
+        USE:
+            - For finding major requirements
+        '''
+        if major_code not in MAJOR_REQS:
+            return []
+        else:
+            return MAJOR_REQS[major_code]
+
+
+    @mcp.tool()
+    def rag_search(query: str) -> list[dict[str, float | str]]:
+        """
+        Rag seatch over pages on Yale.eud
+
+        Use to try and find contetual information.
+
+        ARGUMENTS:
+           - query (str): search query
+
+        USE:
+           - For finding contextual information
+
+        DO NOT USE:
+           - For finding courses or major requirments. There are other tools for that.
+        """
+        return rag_search(query)
 
     @mcp.tool()
     def add_to_selected(ids: List[str], client_id: str) -> Dict[str, Any]:

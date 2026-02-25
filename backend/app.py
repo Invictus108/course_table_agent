@@ -48,13 +48,19 @@ def get_courses_from_coursetable():
 
     return data
 
+def get_major_reqs():
+    with open("major_reqs.json", "r", encoding="utf-8") as f:
+        return json.load(f)
 
-mcp = create_mcp(get_courses_from_coursetable())
+
+
+mcp = create_mcp(get_courses_from_coursetable(), get_major_reqs())
 tools = asyncio.run(mcp.list_tools())
 mcp_client = Client(mcp)
 
 
 async def call_mcp_tool(name: str, args: dict, id):
+    
     async with mcp_client:  # <-- REQUIRED
         args["client_id"] = id
         return await mcp_client.call_tool(name, args)
