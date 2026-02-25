@@ -307,18 +307,13 @@ export async function switchWorksheetFromString(input) {
 
 
   // _button_d5on0_21
-  try {
-    const candidates = Array.from(document.querySelectorAll('button._button_d5on0_21'))
-  } catch (error) {
-    console.error('[CourseTable] Worksheet dropdown button not found', error);
-    return false;
-  }
-  
-
-  comsole.log("candidates", candidates);
+  // try {
+    const candidates = Array.from(document.querySelectorAll('button._button_d5on0_21, button.dropdown-toggle.btn.btn-primary'))
+  // } catch (error) {
+  //   console.error('[CourseTable] Worksheet dropdown button not found', error);
+  //   return false;
+  // }
   const dropdownButton = candidates[1];
-
-  comsole.log("buttons", dropdownButton);
 
   if (!dropdownButton) {
     console.error('[CourseTable] Worksheet dropdown button not found');
@@ -334,27 +329,27 @@ export async function switchWorksheetFromString(input) {
 
   // 3) Wait for react-select listbox
   const listbox = await new Promise((resolve) => {
-  // Check immediately
-  const existing = document.querySelector('[role="listbox"]');
-  if (existing) return resolve(existing);
+    // Check immediately
+    const existing = document.querySelector('[role="listbox"]');
+    if (existing) return resolve(existing);
 
-  // Otherwise, observe DOM changes
-  const observer = new MutationObserver(() => {
-    const lb = document.querySelector('[role="listbox"]');
-    if (lb) {
+    // Otherwise, observe DOM changes
+    const observer = new MutationObserver(() => {
+      const lb = document.querySelector('[role="listbox"]');
+      if (lb) {
+        observer.disconnect();
+        resolve(lb);
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Timeout fallback
+    setTimeout(() => {
       observer.disconnect();
-      resolve(lb);
-    }
+      resolve(null);
+    }, 1500);
   });
-
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  // Timeout fallback
-  setTimeout(() => {
-    observer.disconnect();
-    resolve(null);
-  }, 1500);
-});
   if (!listbox) {
     console.error('[CourseTable] Worksheet listbox did not appear');
     return false;
@@ -363,12 +358,15 @@ export async function switchWorksheetFromString(input) {
   // 4) Scan options
   const options = [...listbox.querySelectorAll('[role="option"]')];
 
+  console.log(normalizedInput);
   for (const option of options) {
+    console.log(option)
     const name = option.textContent?.trim();
     if (!name) continue;
 
     if (normalizedInput.includes(name.toLowerCase())) {
       option.click();
+      dropdownButton.click();
       return true;
     }
   }

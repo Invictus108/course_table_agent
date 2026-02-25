@@ -7,7 +7,7 @@ import {
   removeCourses,
   addCourses,
   createWorksheet,
-  switchWorksheetFromString
+  switchWorksheetFromString,
 } from "./utils.js";
 
 const API_ROUTE = "http://127.0.0.1:5001";
@@ -150,8 +150,9 @@ const onWorksheetChange = async () => {
   );
   if (ws) renderWorksheetCourses(ws, seasonMaps);
 
-  const selectedText = worksheetSelect.options[worksheetSelect.selectedIndex].textContent.trim();
-  console.log(selectedText)
+  const selectedText =
+    worksheetSelect.options[worksheetSelect.selectedIndex].textContent.trim();
+  console.log(selectedText);
   // switch worksheet
   switchWorksheetOnActiveTab(selectedText);
 };
@@ -305,6 +306,13 @@ async function submit() {
           renderWorksheetDropdown(worksheets);
           worksheetSelect.disabled = false;
 
+          chrome.tabs.query(
+            { url: "*://*.coursetable.com/*" },
+            async (tabs) => {
+              for (const tab of tabs) await reloadTabAndWait(tab.id);
+            },
+          );
+
           setTimeout(() => {
             const options = Array.from(worksheetSelect.options);
 
@@ -328,15 +336,13 @@ async function submit() {
                 makeWorksheetKey(w.season, w.worksheetNumber) === currentKey,
             );
             if (current) renderWorksheetCourses(current, seasonMaps);
-
-            chrome.tabs.query({ url: "*://*.coursetable.com/*" }, (tabs) => {
-              for (const tab of tabs) chrome.tabs.reload(tab.id);
-            });
-          }, 500);
+          }, 1000);
         }, 1000);
 
-
-        const selectedText = worksheetSelect.options[worksheetSelect.selectedIndex].textContent.trim();
+        const selectedText =
+          worksheetSelect.options[
+            worksheetSelect.selectedIndex
+          ].textContent.trim();
         // switch to new worksheet
         switchWorksheetOnActiveTab(selectedText);
 
@@ -361,6 +367,21 @@ async function submit() {
 }
 
 submitButton.addEventListener("click", submit);
+
+async function reloadTabAndWait(tabId) {
+  // 1. Initiate reload
+  chrome.tabs.reload(tabId);
+
+  // 2. Return a promise that resolves when the tab is complete
+  return new Promise((resolve) => {
+    chrome.tabs.onUpdated.addListener(function listener(updatedTabId, info) {
+      if (updatedTabId === tabId && info.status === "complete") {
+        chrome.tabs.onUpdated.removeListener(listener);
+        resolve();
+      }
+    });
+  });
+}
 
 function renderMessages() {
   if (!messagesEl) return;
