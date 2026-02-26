@@ -130,8 +130,7 @@ with open("../scrapers/yale_crawl.jsonl", "r", encoding="utf-8") as f:
     for line in f:
         if line.strip():
             obj = json.loads(line)
-            passages.append(obj["text"])
-
+            passages.append(obj["title"]*5 + " " + obj["text"]) # weight title because it is descriptive 
 
 # Chunking config
 CHUNK_SIZE = 2000

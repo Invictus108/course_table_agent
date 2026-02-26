@@ -1,3 +1,5 @@
 .env
 202601 (1).json
 yale_crawl.jsonl
+clean_yale_crawl.jsonl
+clean_yale_crawl_v2.jsonl

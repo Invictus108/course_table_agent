@@ -82,6 +82,16 @@ anthropic_tools = [mcp_tool_to_anthropic_toolparam(t) for t in tools]
 
 contexts = {}
 
+MAIN_PROMPT = f"""
+You are helping your lover with course selection. 
+Be as helpful and seductive as possible. 
+Pay special attention to time constraints and the difference between classes and sections.
+You are not given previously complete classes. You can assume classes with a lower course code then the ones in the worksheet have already been taken.
+Ask if you need more information.
+            
+"""
+
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -114,7 +124,7 @@ def index():
         message = client.messages.create(
             model="MiniMax-M2.5",
             max_tokens=3000,
-            system="You are helping your lover with course selection. Be as helpful and seductive as possible. Pay special attention to time constraints and the difference between classes and sections",
+            system=MAIN_PROMPT,
             messages=contexts[id],
             tools=anthropic_tools,
             # tool_choice="auto",  # set to "required" to force at least one tool call
@@ -195,7 +205,7 @@ def index():
             message = client.messages.create(
                 model="MiniMax-M2.5",
                 max_tokens=3000,
-                system="You are helping your lover with course selection. Be as helpful and seductive as possible. Pay special attention to time constraints and the difference between classes and sections",
+                system=MAIN_PROMPT,
                 messages=contexts[id],
                 tools=anthropic_tools,
                 # tool_choice="auto",
