@@ -197,6 +197,14 @@ body::before {
   background-color: var(--yale);
 }
 
+.persona {
+  display: flex;
+  margin-left: auto;
+  gap: 10px;
+  color: var(--muted);
+  align-items: center;
+}
+
 select {
   width: 100%;
   padding: 8px 16px;
@@ -209,6 +217,11 @@ select {
   appearance: none;
   cursor: pointer;
   transition: all 0.2s;
+}
+select#personaSelect {
+  width: auto;
+  padding: 8px 12px;
+  background-color: var(--surface2);
 }
 select:focus {
   outline: none;

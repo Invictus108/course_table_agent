@@ -48,10 +48,15 @@ def get_courses_from_coursetable():
 
     return data
 
+
+def get_prompts():
+    with open("prompts.json", "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 def get_major_reqs():
     with open("major_reqs.json", "r", encoding="utf-8") as f:
         return json.load(f)
-
 
 
 mcp = create_mcp(get_courses_from_coursetable(), get_major_reqs())
@@ -60,7 +65,7 @@ mcp_client = Client(mcp)
 
 
 async def call_mcp_tool(name: str, args: dict, id):
-    
+
     async with mcp_client:  # <-- REQUIRED
         args["client_id"] = id
         return await mcp_client.call_tool(name, args)
@@ -82,15 +87,10 @@ anthropic_tools = [mcp_tool_to_anthropic_toolparam(t) for t in tools]
 
 contexts = {}
 
-MAIN_PROMPT = f"""
-You are helping your lover with course selection. 
-Be as helpful and seductive as possible. 
-Pay special attention to time constraints and the difference between classes and sections.
-You are not given previously complete classes. You can assume classes with a lower course code then the ones in the worksheet have already been taken.
-Ask if you need more information.
-            
-"""
+prompts = get_prompts()
 
+MAIN_PROMPT = prompts["main_prompt"]
+persona_prompts = prompts["persona_prompts"]
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -101,8 +101,12 @@ def index():
         courses = data["courses"]
         major = data["major"]
         id = data["netId"]
+        name = data["name"]
         year = data["year"]
         prompt = data["prompt"]
+        persona = data["persona"]
+
+        system_prompt = MAIN_PROMPT + persona_prompts[persona]
 
         courses_crn = [str(c["crn"]) for c in courses]
         tool_result = asyncio.run(
@@ -114,7 +118,7 @@ def index():
             contexts[id].append(
                 {
                     "role": f"user",
-                    "content": f"I am a {year} at Yale with id {id} {"studying " + major if major != "Undeclared" else ""}. I am considering these courses: {courses}, and I am looking for my courses next semester. Around 5 courses per semeester is typical with 6 being a overload."
+                    "content": f"I am {name}, a {year} at Yale with id {id} {"studying " + major if major != "Undeclared" else ""}. I am considering these courses: {courses}, and I am looking for my courses next semester. Around 5 courses per semester is typical with 6 being a overload.",
                 }
             )
 
@@ -124,7 +128,7 @@ def index():
         message = client.messages.create(
             model="MiniMax-M2.5",
             max_tokens=3000,
-            system=MAIN_PROMPT,
+            system=system_prompt,
             messages=contexts[id],
             tools=anthropic_tools,
             # tool_choice="auto",  # set to "required" to force at least one tool call
@@ -205,7 +209,7 @@ def index():
             message = client.messages.create(
                 model="MiniMax-M2.5",
                 max_tokens=3000,
-                system=MAIN_PROMPT,
+                system=system_prompt,
                 messages=contexts[id],
                 tools=anthropic_tools,
                 # tool_choice="auto",

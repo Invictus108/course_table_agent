@@ -18,6 +18,7 @@ const coursesEl = document.getElementById("courses");
 const promptEl = document.getElementById("prompt");
 const submitButton = document.getElementById("submit");
 const messagesEl = document.getElementById("messages");
+const personaEl = document.getElementById("personaSelect");
 
 let userData = null;
 let chat = [];
@@ -230,12 +231,16 @@ async function submit() {
       return map[y];
     };
 
+    const persona = personaEl.value;
+
     const payload = {
       netId: userData.netId,
+      name: userData.firstName + " " + userData.lastName,
       year: yearToLabel(userData.year),
       major: userData.major,
       courses: courseCache,
       prompt: promptText,
+      persona: persona,
     };
 
     setStatus("Submitting…");
