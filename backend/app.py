@@ -118,7 +118,7 @@ def index():
             contexts[id].append(
                 {
                     "role": f"user",
-                    "content": f"I am {name}, a {year} at Yale with id {id} {"studying " + major if major != "Undeclared" else ""}. I am considering these courses: {courses}, and I am looking for my courses next semester. Around 5 courses per semester is typical with 6 being a overload.",
+                    "content": f"I am {name}, a {year} at Yale with id {id} {"studying " + major if major != "Undeclared" else ""}. My worksheet currently contains: {courses}, and I am looking for my courses next semester. Around 5 courses per semester is typical with 6 being a overload.",
                 }
             )
 

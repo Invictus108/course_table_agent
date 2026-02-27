@@ -11,6 +11,32 @@ sys.path.append("..")
 from rag.rag import get_top_k
 
 
+def bitmask_to_days(mask: int) -> str:
+    days = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
+    return "/".join(day for i, day in enumerate(days, 1) if mask >> i & 1)
+
+
+def days_to_bitmask(days):
+    mapping = {
+        "Monday": 1,
+        "Tuesday": 2,
+        "Wednesday": 3,
+        "Thursday": 4,
+        "Friday": 5,
+        "Saturday": 6,
+        "Sunday": 7,
+    }
+    return sum(1 << mapping[day] for day in days if day in mapping)
+
+
 def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> FastMCP:
     """
     Factory function.
@@ -22,6 +48,10 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
 
     for course in data:
         listings = course.get("listings", [])
+
+        if course.get("course_meetings"):
+            for m in course.get("course_meetings"):
+                m["days_of_week"] = bitmask_to_days(int(m["days_of_week"]))
 
         for listing in listings:
             crn = listing.get("crn")
@@ -54,7 +84,6 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
         else:
             MAJOR_REQS[course["subject"]] = course["text"]
 
-
     # Per-client selected list (in-memory, per process)
     SELECTED: Dict[str, set[str]] = {}
 
@@ -69,9 +98,9 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
     @mcp.tool()
     def query_items(filters: Dict[str, Any], client_id: str) -> Dict[str, Any]:
         """
-        Filter parameters for course search.
+        Queries the Yale course catalog for courses matching the given filters.
 
-        Will return a random sammple of 25 times that match the filters.
+        Will return a random sample of 25 courses that match the filters.
 
         Allowed filters (all optional):
 
@@ -106,13 +135,11 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
 
 
         - days_of_week:
-            An array of bitmask filters on days of the week.
+            An array of day names
             Example:
-                days_of_week = [20]           # Tuesday/Thursday
+                days_of_week = ["Tuesday", "Thursday"]
 
-            Important: Coursetable days_of_week is a bitmask where Monday = 2, Tuesday = 4, Wednesday = 8, Thursday = 16, Friday = 32, Saturday = 64, Sunday = 128.
-            A value represents the sum of these (e.g., 20 = 4 + 16 = Tuesday/Thursday).
-            Always decode meeting days using this mapping.
+            Will match all courses where the meeting days are a subset of the specified days.
 
         - only_courses:
             A boolean flag to include only actual courses (no sections).
@@ -124,7 +151,7 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
             Will match words in course title and description.
             Example:
                 keywords = ["machine learning", "artificial intelligence"]
-        
+
         - professors
             List of strings (any match).
             Will match professors.
@@ -168,7 +195,6 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
                         break
                 else:
                     ok = False
-        
 
             # average_rating: lower bound
             if ok and "average_rating" in filters:
@@ -191,9 +217,10 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
                 found = False
                 for m in meetings:
                     days = m["days_of_week"]
-                    for d in filters["days_of_week"]:
-                        if days == d:
-                            found = True
+                    b1 = days_to_bitmask(days.split("/"))
+                    b2 = days_to_bitmask(filters["days_of_week"])
+                    if (b1 & b2) == b1:
+                        found = True
                 if not found:
                     ok = False
 
@@ -244,30 +271,43 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
         random.shuffle(out)
 
         return {"total": len(out), "items": out[:25]}
-    
+
     @mcp.tool()
     def get_major_reqs(major_code: str) -> str:
-        '''
+        """
         Get major requirements for a given major code.
+        Use when the user mentions a major, requirement, or asks whether courses satisfy degree progress.
+        Guidance:
+            Check requirements before making strong claims about what a student should take.
+            Use requirements to identify missing categories, sequencing concerns, and high-value next courses.
+            If the student is undecided between majors, compare requirement structures before recommending a path.
 
         ARGUMENTS:
             - major_code (str): the major code (EX: CPSC, PHYS, ENGL)
-        
+
         notes: for combined majors (EX: Math + CS) just combine the codes with a + (MATH+CPSC)
 
         USE:
             - For finding major requirements
-        '''
+        """
         if major_code not in MAJOR_REQS:
             return "Major code not found"
         else:
             return MAJOR_REQS[major_code]
 
-
     @mcp.tool()
     def rag_search(query: str) -> list[dict[str, float | str]]:
         """
-        Rag seatch over pages on Yale.eud
+        Rag search over pages on yale.edu
+        Use to retrieve Yale-specific context from yale.edu sources.
+        Especially useful for:
+            professor or instructor context,
+            labs, research groups, and programs
+            departmental policies or advising pages
+            distributional or program guidance
+            Yale College resources, centers, and opportunities
+            relevant Yale news or announcements
+            background context that improves recommendations beyond catalog data
 
         Use to try and find contetual information.
 

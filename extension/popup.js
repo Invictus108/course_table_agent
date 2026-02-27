@@ -311,12 +311,11 @@ async function submit() {
           renderWorksheetDropdown(worksheets);
           worksheetSelect.disabled = false;
 
-          await chrome.tabs.query(
-            { url: "*://*.coursetable.com/*" },
-            async (tabs) => {
-              for (const tab of tabs) await reloadTabAndWait(tab.id);
-            },
-          );
+          const tabs = await chrome.tabs.query({
+            url: "*://*.coursetable.com/*",
+          });
+
+          for (const tab of tabs) await reloadTabAndWait(tab.id);
 
           setTimeout(() => {
             const options = Array.from(worksheetSelect.options);
