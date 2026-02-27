@@ -1,18 +1,19 @@
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-data = np.load("embeddings_with_text.npz", allow_pickle=True)
+data = np.load("embeddings_with_text_v2.npz", allow_pickle=True)
 
 model = SentenceTransformer(
     "BAAI/bge-large-en-v1.5",
-    device="cpu" 
+    device="cpu"
 )
 
 def get_embedding(query):
     return model.encode(f"Query: {query}", normalize_embeddings=True)
 
+
 embeddings = data["embeddings"]   # shape: (N, dim)
-texts = data["texts"]  
+texts = data["texts"] 
 
 
 def get_top_k(query, k=5):
