@@ -126,10 +126,14 @@ print("MODEL DEVICE: ", model.device)
 import json
 passages = []
 
-with open("../scrapers/yale_crawl.jsonl", "r", encoding="utf-8") as f:
+seen_set = set()
+with open("../scrapers/clean_yale_crawl_v2.jsonl", "r", encoding="utf-8") as f:
     for line in f:
         if line.strip():
             obj = json.loads(line)
+            if obj["text"] in seen_set:
+                continue
+            seen_set.add(obj["text"])
             passages.append(obj["title"]*5 + " " + obj["text"]) # weight title because it is descriptive 
 
 # Chunking config
@@ -139,14 +143,10 @@ i = 0
 
 chunks = []
 for p in passages:
-    p = clean_text(p)
     if len(p) < 200:
-        print("dropping")
-        print(p)
-        print()
         continue
     if i % 1000 == 0:
-        pass #print(p)
+        print(p)
     i += 1
     if len(p) <= CHUNK_SIZE:
         chunks.append(f"Passage: {p}")
@@ -154,7 +154,7 @@ for p in passages:
         for i in range(0, len(p), CHUNK_SIZE - OVERLAP):
             chunk = p[i : i + CHUNK_SIZE]
 
-
+print(f"CHUNKS: {len(chunks)}")
 
 # Encode in batches (CRITICAL)
 embeddings = model.encode(
@@ -166,7 +166,7 @@ embeddings = model.encode(
 
 # Save efficiently
 np.savez(
-    "embeddings_with_text.npz",
+    "embeddings_with_text_v2.npz",
     embeddings=embeddings.astype("float32"),
     texts=np.array(chunks, dtype=object)
 )

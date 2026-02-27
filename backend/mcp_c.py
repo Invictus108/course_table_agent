@@ -96,6 +96,261 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
     # ---- TOOLS ----
 
     @mcp.tool()
+    def get_majors(client_id: str) -> str:
+        """
+        Returns a list of majors and their mappings
+
+        This takes no arguemnts and returns a string with all the mappings.
+        
+        """
+
+        res = """
+            Aerospace Studies (USAF)
+            African American Studies (AFAM)
+            African Studies (AFST)
+            Akkadian (AKKD)
+            American Sign Language (ASL)
+            American Studies (AMST)
+            Ancient Greek (GREK)
+            Anthropology (ANTH)
+            Applied Mathematics (AMTH)
+            Applied Physics (APHY)
+            Arabic (ARBC)
+            Archaeological Studies (ARCG)
+            Architecture (ARCH)
+            Armenian (ARMN)
+            Art (ART)
+            Astronomy (ASTR)
+            Bengali (BNGL)
+            Biological & Biomedical Sci (B&BS)
+            Biology (BIOL)
+            Biomedical Engineering (BENG)
+            Biostatistics (BIS)
+            British Studies (BRST)
+            Burmese (BURM)
+            Catalan (CTLN)
+            Cell & Molecular Physiology (C&MP)
+            Cell Biology (CBIO)
+            Chemical Engineering (CENG)
+            Chemistry (CHEM)
+            Cherokee (CHER)
+            Child Study (CHLD)
+            Chinese (CHNS)
+            Chronic Disease Epidemiology (CDE)
+            Classical Civilization (CLCV)
+            Classics (CLSS)
+            Clinical Clerkships (MEDR)
+            Cognitive Science (CGSC)
+            Collections: Objects, Research, Society (COSM)
+            Comp Biol & Bioinformatics (CB&B)
+            Comparative Literature (CPLT)
+            Computer Science (CPSC)
+            Computer Science and Economics (CSEC)
+            Computing and Linguistics (CSLI)
+            Computing and the Arts (CPAR)
+            Courses in School of Medicine (MEDC)
+            Czech (CZEC)
+            Directed Studies (DRST)
+            Directing (DIR)
+            Diss Research – in Residence (DISR)
+            Drama (DRAM)
+            Drama Summer (DRMA)
+            Dutch (DUTC)
+            Early Modern Studies (EMST)
+            Earth and Planetary Sciences (EPS)
+            East Asian Lang and Lit (EALL)
+            East Asian Studies (EAST)
+            Ecology & Evolutionary Biology (E&EB)
+            Ecology & Evolutionary Biology (EEB)
+            Economics (ECON)
+            Education Studies (EDST)
+            Egyptology (EGYP)
+            Electrical & Computer Engineering (EECS)
+            Electrical Engineering (ECE)
+            Energy Studies (ENRG)
+            Engineering & Applied Science (ENAS)
+            English (ENGL)
+            English Language Program (ELP)
+            Environment (ENV)
+            Environmental Engineering (ENVE)
+            Environmental Health Sciences (EHS)
+            Environmental Studies (EVST)
+            Epidemiology & Public Health (EPH)
+            Epidemiology Microbial Disease (EMD)
+            Ethics, Politics, & Economics (EP&E)
+            Ethnicity, Race, & Migration (ER&M)
+            European & Russian Studies (E&RS)
+            Exchange Scholar Experience (EXCH)
+            Executive MPH (EMPH)
+            Experimental Pathology (EXPA)
+            Film & Media Studies (FILM)
+            Finnish (FNSH)
+            FLPN (FLPN)
+            Forestry & Environment Studies (F&ES)
+            French (FREN)
+            Genetics (GENE)
+            Geology and Geophysics (G&G)
+            German (GMAN)
+            Global Affairs (GLBL)
+            Health Policy and Management (HPM)
+            Health Sciences (HSCI)
+            Health Studies (HLTH)
+            Hebrew (HEBR)
+            HELN (HELN)
+            Hindi (HNDI)
+            Hist of Science, Hist of Med (HSHM)
+            History (HIST)
+            History of Art (HSAR)
+            Human Rights (HMRT)
+            Humanities (HUMS)
+            Hungarian (HGRN)
+            Immunobiology (IBIO)
+            Ind Res in Sciences (IDRS)
+            Indonesian (INDN)
+            Interdept Neuroscience Program (INP)
+            Investigative Medicine (IMED)
+            Italian Studies (ITAL)
+            Japanese (JAPN)
+            Jewish Studies (JDST)
+            Khmer (KHMR)
+            Kiswahili (SWAH)
+            Korean (KREN)
+            Latin (LATN)
+            Latin American Studies (LAST)
+            Law (LAW)
+            Linguistics (LING)
+            Literature (LITR)
+            Management (MGT)
+            Management, PhD (MGMT)
+            Master's Thesis Research (MRES)
+            Material Hist of Human Record (MHHR)
+            Mathematics (MATH)
+            Mechanical Engineering (MENG)
+            Medieval Studies (MDVL)
+            Mesopotamia (MESO)
+            Microbiology (MBIO)
+            Modern Greek (MGRK)
+            Modern Middle East Studies (MMES)
+            Modern Tibetan (MTBT)
+            Molecular Biophysics & Biochem (MB&B)
+            Molecular, Cellular & Dev Biology (MCDB)
+            Music Department (MUSI)
+            Naval Science (NAVY)
+            Near Eastern Langs & Civs (NELC)
+            Nepali (NPLI)
+            Neuroscience (NSCI)
+            Nursing (NURS)
+            Ottoman (OTTM)
+            Persian (PERS)
+            Personalized Med & Applied Engr (PMAE)
+            Pharmacology (PHAR)
+            Philosophy (PHIL)
+            Physician Assistant Online Program (OLPA)
+            Physician Associate Program (PA)
+            Physics (PHYS)
+            Polish (PLSH)
+            Political Science (PLSC)
+            Portuguese (PORT)
+            Practicum Analysis (PRAC)
+            Prep for Adv to Candidacy (CAND)
+            Preparing for Qualifying Exams (QUAL)
+            Psychology (PSYC)
+            Public Health (PUBH)
+            Public Humanities (PHUM)
+            Punjabi (PNJB)
+            Quantum Materials Sci & Engr (QMSE)
+            Religion (REL)
+            Religious Studies (RLST)
+            Renaissance Studies (RNST)
+            Romanian (ROMN)
+            Russian (RUSS)
+            Russian & East Europe Studies (RSEE)
+            Sanskrit (SKRT)
+            School of Medicine (MD)
+            School of Music (MUS)
+            Science (SCIE)
+            Semitic (SMTC)
+            Serbian & Croatian (SBCR)
+            Sinhala (SNHL)
+            Slavic (SLAV)
+            Social and Behavioral Sciences (SBS)
+            Sociology (SOCY)
+            South Asian Studies (SAST)
+            Spanish (SPAN)
+            Special Divisional Major (SPEC)
+            Start Program – Medical School (STRT)
+            Statistics and Data Sciences (S&DS)
+            Studies in the Environment (STEV)
+            Study of the City (STCY)
+            Summer Term (SUMR)
+            Swedish (SWED)
+            Tamil (TAML)
+            Theater, Dance, & Performance Studies (THST)
+            Theater, Dance, & Performance Studies (TDPS)
+            Tibetan (TBTN)
+            TLGU (TLGU)
+            Translational Biomedicine (PTB)
+            Turkish (TKSH)
+            Twi (TWI)
+            Ukrainian (UKRN)
+            Urban Studies (URBN)
+            Vietnamese (VIET)
+            Visiting Assistant in Research (VAIR)
+            Wolof (WLOF)
+            Women's, Gender & Sexuality Studies (WGSS)
+            Yiddish (YDSH)
+            Yoruba (YORU)
+            Zulu (ZULU)
+
+            Combined majors
+            ------------
+            MATH+PHYS - Mathematics + Physics
+            CPSC+MATH - Computer Science + Mathematics
+            CPSC+PSYC - Computer Science + Psychology
+            ECON+MATH - Economics + Mathematics
+            MATH+PHIL - Mathematics + Philosophy
+            MATH+PHYS - Mathematics + Physics
+            PHYS+G&G - Physics + Geosciences 
+            PHYS+PHIL - Physics + Philosophy
+            EECS - Electrical Engineering and Computer Science
+
+
+            Certificates (Similar to Minors)
+            ------------
+
+            CERT-AFST — African Studies
+            CERT-NELC — Near Eastern Languages and Civilizations
+            CERT-SAST — South Asian Studies
+            CERT-SEAS — Southeast Asia Studies
+            CERT-EALL — East Asian Languages and Literatures
+            CERT-CLSS — Classics
+            CERT-CSS — Climate Science and Solutions
+            CERT-COSM — Collections: Objects, Research, Society
+            CERT-CPSC — Computer Science (Programming)
+            CERT-GMST — German Studies
+            CERT-EDST — Education Studies
+            CERT-ENRG — Energy Studies
+            CERT-ETHNO — Ethnography
+            CERT-FOOD — Food, Agriculture, and Climate Change
+            CERT-FREN — French
+            CERT-GHST — Global Health Studies
+            CERT-HR — Human Rights Studies
+            CERT-ISLM — Islamic Studies
+            CERT-ITAL — Italian Studies
+            CERT-MDVL — Medieval Studies
+            CERT-PERS — Persian and Iranian Studies
+            CERT-PORT — Portuguese
+            CERT-QSE — Quantum Science and Engineering
+            CERT-RUSS — Russian
+            CERT-SPAN — Spanish
+            CERT-SDS — Statistics and Data Science
+            CERT-TRAN — Translation Studies
+                                
+            """
+        
+        return res
+
+    @mcp.tool()
     def query_items(filters: Dict[str, Any], client_id: str) -> Dict[str, Any]:
         """
         Queries the Yale course catalog for courses matching the given filters.
@@ -113,9 +368,7 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
             One or more department codes (strings).
             Matches courses in ANY of the listed departments.
             Example:
-                department = ["CS", "MATH"]
-
-            Departments: {'CSSM', 'SNHL', 'ARBC', 'MMES', 'EP&E', 'HPM', 'PLSH', 'MGRK', 'WLOF', 'ELP', 'USAF', 'HEBR', 'HNDI', 'SBCR', 'PHAR', 'AKKD', 'CSMC', 'PMAE', 'PHIL', 'SWED', 'MCDB', 'SMTC', 'ENRG', 'BNGL', 'FLPN', 'OTTM', 'COSM', 'SBS', 'EGYP', 'TAML', 'FNSH', 'BENG', 'CENG', 'EMPH', 'MEDR', 'TLGU', 'ITAL', 'CPSC', 'CZEC', 'PHYS', 'PA', 'RSEE', 'ASL', 'JDST', 'ECE', 'MD', 'EHS', 'CSSY', 'VAIR', 'CSBR', 'CSBF', 'ER&M', 'PUBH', 'CDE', 'HSAR', 'CB&B', 'ENV', 'KREN', 'B&BS', 'MRES', 'MGMT', 'BIS', 'HSCI', 'TDPS', 'HIST', 'SOCY', 'MHHR', 'MEDC', 'ENGL', 'GMAN', 'EDST', 'PHUM', 'BURM', 'CAND', 'GENE', 'MGT', 'EXCH', 'MBIO', 'MUSI', 'PTB', 'HELN', 'CSEC', 'MATH', 'S&DS', 'PERS', 'CSDC', 'CGSC', 'FILM', 'EMD', 'AFAM', 'CLSS', 'UKRN', 'YDSH', 'ENAS', 'IMED', 'RUSS', 'CSJE', 'TBTN', 'HLTH', 'MUS', 'SKRT', 'CSMY', 'AMST', 'PORT', 'REL', 'DISR', 'HSHM', 'INP', 'EALL', 'LAST', 'PRAC', 'DRAM', 'ASTR', 'ART', 'EPS', 'E&RS', 'EVST', 'MENG', 'MDVL', 'PATH', 'CHEM', 'ARCG', 'NURS', 'NAVY', 'CSTC', 'WGSS', 'HGRN', 'VIET', 'ARCH', 'SAST', 'CHNS', 'SWAH', 'CSPC', 'CSGH', 'ACCT', 'MESO', 'PNJB', 'SLAV', 'YORU', 'BIOL', 'NSCI', 'PLSC', 'CLCV', 'ENVE', 'MB&B', 'NELC', 'CSBK', 'APHY', 'ANTH', 'LATN', 'IBIO', 'EEB', 'RLST', 'CSES', 'INDN', 'PSYC', 'FREN', 'LAW', 'SPAN', 'LING', 'NPLI', 'KHMR', 'SCIE', 'CSYC', 'URBN', 'EAST', 'CBIO', 'C&MP', 'GREK', 'TKSH', 'EMST', 'MTBT', 'QUAL', 'AMTH', 'GLBL', 'JAPN', 'AFST', 'ECON', 'ZULU', 'DRST', 'CSTD', 'CHER', 'CPLT', 'DUTC', 'CHLD', 'HUMS'
+                department = ["CPSC", "MATH"]
 
         - average_rating:
             Lower bound (inclusive) on average class rating.

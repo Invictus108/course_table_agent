@@ -3,3 +3,9 @@
 yale_crawl.jsonl
 clean_yale_crawl.jsonl
 clean_yale_crawl_v2.jsonl
+
+__pycache__/
+**pyc
+
+embeddings_with_text.npz
+embeddings_with_text_v2.npz
