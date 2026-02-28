@@ -127,7 +127,7 @@ import json
 passages = []
 
 seen_set = set()
-with open("../scrapers/focused_yale_academic_crawl.jsonl", "r", encoding="utf-8") as f:
+with open("../scrapers/focused_yale_academic_crawl_v2.jsonl", "r", encoding="utf-8") as f:
     for line in f:
         if line.strip():
             obj = json.loads(line)

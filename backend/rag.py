@@ -1,7 +1,7 @@
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-data = np.load("embeddings_with_text_v3.npz", allow_pickle=True)
+data = np.load("embeddings_with_text_v4.npz", allow_pickle=True)
 
 model = SentenceTransformer(
     "BAAI/bge-large-en-v1.5",

@@ -340,8 +340,8 @@ async function submit() {
                 makeWorksheetKey(w.season, w.worksheetNumber) === currentKey,
             );
             if (current) renderWorksheetCourses(current, seasonMaps);
-          }, 1000);
-        }, 1000);
+          }, 2000);
+        }, 2000);
 
         const selectedText =
           worksheetSelect.options[
