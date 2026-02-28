@@ -127,7 +127,7 @@ import json
 passages = []
 
 seen_set = set()
-with open("../scrapers/clean_yale_crawl_v2.jsonl", "r", encoding="utf-8") as f:
+with open("../scrapers/focused_yale_academic_crawl.jsonl", "r", encoding="utf-8") as f:
     for line in f:
         if line.strip():
             obj = json.loads(line)
@@ -143,6 +143,7 @@ i = 0
 
 chunks = []
 for p in passages:
+    p = clean_text(p)
     if len(p) < 200:
         continue
     if i % 1000 == 0:
@@ -166,7 +167,7 @@ embeddings = model.encode(
 
 # Save efficiently
 np.savez(
-    "embeddings_with_text_v2.npz",
+    "embeddings_with_text_v3.npz",
     embeddings=embeddings.astype("float32"),
     texts=np.array(chunks, dtype=object)
 )
