@@ -15,7 +15,7 @@ An AI agent that uses an MCP server and retrieval-augmented generation (RAG) to 
 1. Clone the repo:
    git clone <repo-url>
 2. Install dependencies (example using Python):
-3. 
+   
    python -m venv .venv
    
    source .venv/bin/activate
