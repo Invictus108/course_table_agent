@@ -16,7 +16,7 @@ USER_AGENT = "YaleCourseSelectionResearchBot/1.0 (contact: you@example.com)"
 TIMEOUT_S = 8.0
 DELAY_S = 0.01
 
-OUTPUT_JSONL = "focused_yale_academic_crawl.jsonl"
+OUTPUT_JSONL = "focused_yale_academic_crawl_v2.jsonl"
 
 MAX_PAGES = 1000000
 MAX_DEPTH = 6
@@ -291,8 +291,8 @@ def link_priority(url: str, anchor: str = "") -> int:
 
 def extract_text_and_title(html: str, url: str) -> tuple[str, str]:
     try:
-        _, text, _ = (
-            trafilatura.baseline(
+        text = (
+            trafilatura.extract(
                 html,
             )
             or ""
@@ -384,7 +384,7 @@ def crawl_yale_focused(
 
             try:
                 resp = session.get(url, timeout=timeout_s, allow_redirects=True)
-                time.sleep(delay_s)
+                # time.sleep(delay_s)
             except Exception:
                 continue
 
@@ -418,7 +418,7 @@ def crawl_yale_focused(
 
             score = relevance_score(final_url, title, text)
 
-            if score >= 10:
+            if score >= 8:
                 record = {
                     "id": doc_id(final_url),
                     "url": final_url,
@@ -431,7 +431,7 @@ def crawl_yale_focused(
             else:
                 print(f"[SKIP] depth={depth} score={score} {final_url}")
 
-            if depth < max_depth and score >= 12:
+            if depth < max_depth and score >= 10:
                 for link, anchor in extract_links(html, final_url):
                     if link in seen_enqueued:
                         continue
