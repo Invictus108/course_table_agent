@@ -16,13 +16,15 @@ An AI agent that uses an MCP server and retrieval-augmented generation (RAG) to 
    git clone <repo-url>
 2. Install dependencies (example using Python):
    python -m venv .venv
+   
    source .venv/bin/activate
+   
    pip install -r requirements.txt
-3. Configure environment variable:
+4. Configure environment variable:
    - ANTHROPIC_API_KEY — required API key for the Anthropic model
-4. Start the server:
+5. Start the server:
    python3 app.py
-5. Load frontend:
+6. Load frontend:
    - To use the frontend, load the `frontend` folder as an extension in Chrome (Developer mode → Load unpacked).
 
 ## Configuration
