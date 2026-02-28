@@ -7,8 +7,7 @@ import random
 import sys
 
 # add rag path
-sys.path.append("..")
-from rag.rag import get_top_k
+from rag import get_top_k
 
 
 def bitmask_to_days(mask: int) -> str:
@@ -573,7 +572,7 @@ def create_mcp(data: List[Dict[str, Any]], coure_reqs: List[Dict[str, Any]]) -> 
         DO NOT USE:
            - For finding courses or major requirments. There are other tools for that.
         """
-        return get_top_k(query)
+        return get_top_k(query, k=10)
 
     @mcp.tool()
     def add_to_selected(ids: List[str], client_id: str) -> Dict[str, Any]:

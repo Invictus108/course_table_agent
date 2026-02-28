@@ -9,3 +9,7 @@ __pycache__/
 
 embeddings_with_text.npz
 embeddings_with_text_v2.npz
+focused_yale_academic_crawl.jsonl
+certificates.json
+yale_subject_pages_raw_text.json
+major_reqs_raw_text.json

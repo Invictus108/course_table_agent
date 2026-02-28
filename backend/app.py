@@ -66,7 +66,7 @@ mcp_client = Client(mcp)
 
 async def call_mcp_tool(name: str, args: dict, id):
 
-    async with mcp_client:  # <-- REQUIRED
+    async with mcp_client:  
         args["client_id"] = id
         return await mcp_client.call_tool(name, args)
 
