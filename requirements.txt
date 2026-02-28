@@ -1,0 +1,35 @@
+# Core web framework
+flask
+flask-cors
+
+# Environment variables
+python-dotenv
+
+# HTTP & scraping
+requests
+beautifulsoup4
+lxml
+readability-lxml
+trafilatura
+
+# XML / HTML parsing
+xmltodict
+
+# MCP / agent tooling
+fastmcp
+mcp
+
+# LLM APIs
+anthropic
+
+# Async utilities
+asyncio
+
+# ML / embeddings
+sentence-transformers
+torch
+numpy
+pandas
+
+# Misc utilities
+python-dateutil
